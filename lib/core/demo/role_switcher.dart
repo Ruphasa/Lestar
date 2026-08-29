@@ -102,3 +102,31 @@ Future<void> gantiKeAkun(
     messenger?.showSnackBar(SnackBar(content: Text(pesanError(e))));
   }
 }
+
+/// Pemicu ganti role tanpa app bar.
+///
+/// `ConsumerShell` dan `PartnerShell` sengaja tidak punya app bar — itu
+/// keputusan desain E dan F, bukan kekurangan. Tapi tanpa app bar tidak ada
+/// logo untuk ditekan-lama, dan di depan juri itu berarti tidak ada jalan
+/// keluar dari satu role.
+///
+/// Widget ini menutupi sudut kiri atas seluas 48x48 dan hanya menangkap
+/// tekan-lama; ketukan biasa diteruskan ke bawahnya. Di build non-demo ia
+/// tidak menggambar apa pun dan tidak menangkap apa pun.
+class DemoCornerTap extends ConsumerWidget {
+  const DemoCornerTap({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (!LestarConstants.demoMode) return const SizedBox.shrink();
+    return Positioned(
+      left: 0,
+      top: 0,
+      child: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onLongPress: () => showRoleSwitcher(context, ref),
+        child: const SizedBox(width: 48, height: 48),
+      ),
+    );
+  }
+}

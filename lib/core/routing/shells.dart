@@ -83,7 +83,7 @@ class ConsumerShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    body: navigationShell,
+    body: Stack(children: [navigationShell, const DemoCornerTap()]),
     floatingActionButton: FloatingActionButton(
       onPressed: () => context.push(Routes.qr),
       backgroundColor: LestarTokens.emeraldDeep,
@@ -135,7 +135,9 @@ class PartnerShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    body: SafeArea(child: navigationShell),
+    body: SafeArea(
+      child: Stack(children: [navigationShell, const DemoCornerTap()]),
+    ),
     bottomNavigationBar: NavigationBar(
       height: 72,
       selectedIndex: navigationShell.currentIndex,
