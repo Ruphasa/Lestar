@@ -19,9 +19,39 @@ final currentProfileProvider = FutureProvider<Profile?>((ref) async {
   // Menyalakan ulang setiap kali sesi berubah, termasuk saat pintasan demo
   // berganti akun.
   final _ = ref.watch(authStateProvider);
-  if (uidSekarang == null) return null;
-  return ref.watch(authRepositoryProvider).currentProfile();
+
+  final user = supabase.auth.currentUser;
+  if (user == null) return null;
+
+  try {
+    return await ref.watch(authRepositoryProvider).currentProfile();
+  } catch (_) {
+    // Offline dengan sesi yang masih sah. Membaca `profiles` butuh jaringan,
+    // tapi role sudah ada di dalam JWT — trigger `on_auth_user_created`
+    // menyalinnya ke `raw_user_meta_data` saat registrasi.
+    //
+    // Tanpa jalur ini, mematikan WiFi melempar pengguna yang sudah masuk
+    // kembali ke layar login. Di penutup demo, WiFi memang dimatikan.
+    return _profilDariToken(user);
+  }
 });
+
+/// Profil seadanya dari metadata JWT. Cukup untuk memilih shell dan tema;
+/// angka seperti `ecoPoints` tidak ada di token dan sengaja nol — layar yang
+/// menampilkannya sudah punya jalur kosongnya sendiri.
+Profile _profilDariToken(User user) {
+  final meta = user.userMetadata ?? const {};
+  return Profile(
+    id: user.id,
+    name: (meta['name'] ?? '').toString(),
+    email: user.email ?? '',
+    phone: meta['phone']?.toString(),
+    role: UserRole.parse(meta['role']),
+    ecoPoints: 0,
+    avatarUrl: meta['avatar_url']?.toString(),
+    createdAt: DateTime.tryParse(user.createdAt) ?? DateTime.now(),
+  );
+}
 
 /// Role yang sedang berlaku, atau null kalau belum diketahui.
 final currentRoleProvider = Provider<UserRole?>(
