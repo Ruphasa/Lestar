@@ -229,3 +229,13 @@ create policy "notifikasi ditandai dibaca oleh penerimanya" on public.notificati
 
 create policy "notifikasi ditulis untuk diri sendiri" on public.notifications
   for insert to authenticated with check (user_id = (select auth.uid()));
+
+-- Fungsi trigger tidak boleh muncul sebagai endpoint RPC ------------------
+-- PostgREST mengekspos setiap fungsi di schema public. Fungsi trigger tidak
+-- bisa dipanggil langsung secara bermakna, tapi security advisor Supabase
+-- menandainya (0028/0029) karena semuanya SECURITY DEFINER. Dicabut saja.
+revoke execute on function public.handle_new_user()        from public, anon, authenticated;
+revoke execute on function public.sync_qty_remaining()     from public, anon, authenticated;
+revoke execute on function public.write_esg_event_order()  from public, anon, authenticated;
+revoke execute on function public.write_esg_event_waste()  from public, anon, authenticated;
+revoke execute on function public.enforce_physical_validation() from public, anon, authenticated;
