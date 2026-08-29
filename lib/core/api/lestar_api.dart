@@ -80,7 +80,7 @@ class LestarApi {
       ],
       'target_date': dateKeWire(targetDate),
       'weather_forecast': {'code': weatherCode},
-      if (merchantContext != null) 'merchant_context': merchantContext,
+      'merchant_context': ?merchantContext,
     }, LestarConstants.timeoutForecast);
 
     if (json == null) {
