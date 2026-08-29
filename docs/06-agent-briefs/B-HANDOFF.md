@@ -661,6 +661,44 @@ urutan snapshot yang diterima · [12, 13]
 baris uji dihapus
 ```
 
+### Diuji di emulator dengan APK release
+
+APK `--dart-define=DEMO=true` (67,6 MB) dipasang di emulator Android 16
+(API 36) dan dijalankan sungguhan:
+
+| Yang diuji | Hasil |
+|---|---|
+| `merchant@lestar.id` masuk | mendarat di MerchantShell, tema gelap, 3 tab |
+| Ganti role ke Pak Budi | PartnerShell, tema polos, label HURUF BESAR |
+| Ganti role ke Amira | ConsumerShell, 4 tab + FAB QR emeraldDeep |
+| Waktu ganti role | di bawah 3 detik (diukur ~2,7 dtk termasuk jeda tangkap layar) |
+| Font di mode pesawat | tetap Plus Jakarta Sans / Inter, tidak jatuh ke Roboto |
+| Sesi setelah WiFi mati | bertahan, langsung ke shell yang benar |
+
+**Tiga cacat ditemukan lewat pengujian ini dan sudah diperbaiki**, bukan
+dicatat sebagai utang:
+
+1. **Indikator nav tampil oranye.** Material 3 memakai
+   `colorScheme.secondaryContainer` untuk indikator `NavigationBar`, dan
+   `secondaryContainer` kita bernuansa oranye — padahal oranye khusus untuk
+   uang dan peringatan. Ketiga tema sekarang memaksa indikatornya hijau, dan
+   ada pengujiannya di `test/tokens_test.dart`. **D/E/F: jangan menghapus
+   `navigationBarTheme` dari tema kalian tanpa mengganti indikatornya.**
+
+2. **Tidak ada jalan ganti role dari shell konsumen dan pengepul.** Keduanya
+   sengaja tanpa app bar, jadi tidak ada logo untuk ditekan-lama. Sekarang ada
+   `DemoCornerTap` — area tak terlihat 48x48 di sudut kiri atas yang hanya
+   menangkap tekan-lama, dan di build non-demo tidak menggambar maupun
+   menangkap apa pun. Sudah terpasang di kedua shell; kalau kalian mengganti
+   `body` shell, pertahankan `Stack` yang membungkusnya.
+
+3. **WiFi mati melempar pengguna kembali ke layar login**, meski sesinya masih
+   sah — membaca tabel `profiles` butuh jaringan. Sekarang
+   `currentProfileProvider` jatuh ke metadata JWT (`name`, `role`, `phone`,
+   `avatar_url` yang disalin trigger `on_auth_user_created`). Cukup untuk
+   memilih shell dan tema; `ecoPoints` di jalur ini nol, jadi layar yang
+   menampilkannya perlu tahan terhadap angka nol.
+
 ---
 
 ## 10. Keputusan yang aku ambil sendiri
@@ -778,8 +816,18 @@ Brief menyebut `^7.0.2`; pub.dev sudah di 8.3.2. API berubah:
 pastikan contohnya untuk v8.
 
 ### 11.4 Belum diuji di perangkat fisik
-Emulator dan APK release sudah, perangkat sungguhan belum — tidak ada
-perangkat Android yang terhubung ke mesin ini.
+Emulator dan APK release sudah (lihat bagian 9), perangkat sungguhan belum —
+tidak ada perangkat Android yang terhubung ke mesin ini. Yang paling mungkin
+berbeda di HP entry-level Pak Budi: kecepatan blur `BackdropFilter` di
+`GlassCard`/`DarkGlassCard`. Agent F sudah benar tidak memakainya.
+
+### 11.4b Build rilis pertama gagal karena cache Kotlin
+`:shared_preferences_android:compileReleaseKotlin` gagal dengan
+`Could not close incremental caches`. Ini masalah penguncian berkas di
+Windows, bukan kode kita. `kotlin.incremental=false` sudah ditambahkan ke
+`android/gradle.properties` dan build berikutnya lolos dalam ~1 menit.
+Kalau kalian bertemu error yang sama, hapus foldernya
+(`build/<nama_plugin>`) lalu build ulang.
 
 ### 11.5 `partner_subscriptions` belum punya repository
 Tabelnya ada, modelnya belum aku buat. Brief menyebut tujuh repository dan
@@ -843,7 +891,7 @@ lib/shared/repositories/                                    7 repository + provi
 lib/shared/widgets/                                         14 widget kerangka
 lib/features/auth/presentation/login_screen.dart            milikku
 lib/features/{merchant,consumer,partner}/presentation/      12 stub, milik D/E/F
-test/                                                       58 test, tanpa jaringan
+test/                                                       59 test, tanpa jaringan
 tool/smoke_supabase.dart · smoke_realtime.dart               bukti data nyata
 docs/superpowers/plans/2026-08-29-agent-b-core-migrasi.md    rencana yang dijalankan
 docs/06-agent-briefs/B-HANDOFF.md                            berkas ini
