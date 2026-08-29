@@ -16,7 +16,7 @@ data tiruan.
 ```bash
 flutter pub get
 flutter analyze          # harus: No issues found!
-flutter test             # 58 test, semuanya lulus, tanpa jaringan
+flutter test             # 59 test, semuanya lulus, tanpa jaringan
 
 # Bukti data nyata (butuh jaringan):
 flutter test tool/smoke_supabase.dart
