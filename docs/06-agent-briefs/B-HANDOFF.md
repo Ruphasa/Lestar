@@ -653,6 +653,13 @@ Dua catatan yang perlu kalian tahu:
    jumlah seluruh project, yang hanya terlihat oleh service role. RLS
    membatasi merchant pada peristiwanya sendiri. Ini benar, bukan bug.
 
+3. **`liveListingsStream()` bisa mengembalikan kurang dari 12.** Beberapa jam
+   setelah pengujian di atas, angkanya jadi 11: database tetap punya 12 baris
+   `status='live'`, tapi satu di antaranya sudah lewat `expires_at` dan
+   disaring di klien. Ini bukan saringan yang rusak — ini listing panggung
+   yang menua. `supabase/seed/reset_demo.sql` mengembalikannya; jalankan
+   sebelum gladi dan sebelum tampil.
+
 Realtime, `flutter test tool/smoke_realtime.dart`:
 ```
 sebelum insert · 12 listing live

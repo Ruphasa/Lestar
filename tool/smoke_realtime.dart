@@ -13,7 +13,6 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lestar/core/constants.dart';
 import 'package:lestar/core/supabase/supabase_client.dart';
-import 'package:lestar/shared/models/models.dart';
 import 'package:lestar/shared/repositories/repositories.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
