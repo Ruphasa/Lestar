@@ -92,3 +92,20 @@ select cron.schedule(
   '*/5 * * * *',
   $cron$ select public.run_auto_cascade(false, null) $cron$
 );
+
+-- ...tapi dimatikan sejak awal. Ini disengaja.
+--
+-- Terbukti saat pengujian: begitu jam melewati cutoff merchant, cron memakan
+-- listing panggung. Dalam satu putaran, 6 dari 12 listing seed berubah
+-- 'cascaded' dan radar konsumen ikut kosong — persis kondisi yang tidak boleh
+-- terjadi di pagi hari demo. Kaskade yang dipakai di depan juri adalah pemicu
+-- manual (docs/05-demo-script.md menit 4:30), jadi cron tidak menambah apa pun
+-- selain risiko data panggung berubah tanpa ada yang menekan tombol.
+--
+-- Job-nya tetap terdaftar supaya tinggal dinyalakan di luar masa demo:
+--   select cron.alter_job((select jobid from cron.job
+--                           where jobname = 'lestar-auto-cascade'), active := true);
+select cron.alter_job(
+  (select jobid from cron.job where jobname = 'lestar-auto-cascade'),
+  active := false
+);

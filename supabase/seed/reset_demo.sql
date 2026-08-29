@@ -28,8 +28,16 @@ delete from public.orders o
    and p.email = 'merchant@lestar.id'
    and o.ordered_at > now() - interval '36 hours';
 
--- 3. Batch limbah hasil kaskade Verde Kitchen. Dihapus sebelum listing-nya,
---    supaya jejak source_listing_id ikut hilang, bukan jadi null menggantung.
+-- 3a. Semua batch hasil kaskade yang lahir setelah seed, dari merchant mana pun.
+--     Bukan cuma Verde Kitchen: kalau cron sempat dinyalakan, listing panggung
+--     milik merchant lain juga bisa ikut terkaskade dan harus disapu balik.
+--     Seluruh batch seed punya source_listing_id null, jadi aman.
+delete from public.waste_batches
+ where source_listing_id is not null
+   and created_at > now() - interval '36 hours';
+
+-- 3b. Batch limbah langsung yang dibuat Verde Kitchen di depan juri
+--     (misalnya sisa dapur 8 kg berskor 45 yang masuk B2B tanpa lewat B2C).
 delete from public.waste_batches w
  using public.profiles p
  where p.id = w.source_merchant_id
