@@ -9,7 +9,10 @@ export 'enums.dart';
 export 'esg_event.dart';
 export 'esg_report.dart';
 export 'forecast.dart';
-export 'json.dart';
+// json.dart TIDAK di-export penuh: helper toDouble/toInt bertabrakan nama
+// dengan yang diekspor realtime_client lewat supabase_flutter. Berkas yang
+// membutuhkannya mengimpor 'json.dart' langsung.
+export 'json.dart' show dateKeWire;
 export 'listing.dart';
 export 'merchant.dart';
 export 'nearby.dart';

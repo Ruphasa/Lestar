@@ -1,3 +1,4 @@
+import '../../shared/models/json.dart';
 import '../../shared/models/models.dart';
 
 /// Hasil `/forecast`, atau hasil `FallbackEngine.forecast` kalau server tidak

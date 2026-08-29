@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import '../../shared/models/json.dart';
 import '../../shared/models/models.dart';
 import '../constants.dart';
 import '../fallback_engine.dart';
