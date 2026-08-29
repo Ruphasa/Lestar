@@ -1,0 +1,32 @@
+# Kredensial
+docs/CREDENTIALS-NEEDED.md
+.env
+*.env
+!.env.example
+lestar/.env
+api/.env
+supabase/.env
+
+# Flutter
+.dart_tool/
+build/
+.flutter-plugins*
+*.apk
+*.aab
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+ml/data/*.csv
+ml/model/*.keras
+
+# Node
+node_modules/
+.next/
+.vercel/
+
+# OS
+Thumbs.db
+.DS_Store
