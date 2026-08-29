@@ -72,3 +72,15 @@ Setiap agent menutup pekerjaannya dengan:
 - Daftar item di "Definisi selesai" yang tercapai dan yang tidak
 - Keputusan yang diambil sendiri karena tidak tertulis di dokumen
 - Hal yang memblokir agent lain, kalau ada
+
+## Status
+
+| Agent | Status | Serah terima |
+|---|---|---|
+| A · Database | selesai 29 Agu 2026 | [`A-HANDOFF.md`](A-HANDOFF.md) |
+| B · Core | selesai 30 Agu 2026 | [`B-HANDOFF.md`](B-HANDOFF.md) |
+| C · ML & API | belum | — |
+| D · UI Merchant | boleh mulai | — |
+| E · UI Konsumen | boleh mulai | — |
+| F · UI Pengepul | boleh mulai | — |
+| G · Web & Deck | belum | — |
