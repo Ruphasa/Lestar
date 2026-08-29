@@ -162,3 +162,17 @@ Export PDF pakai paket `pdf` + `printing`. **Ini item yang boleh dikorbankan kal
 ## Sebelum menutup sesi
 
 Tulis ringkasan di `docs/06-agent-briefs/D-HANDOFF.md`: layar yang selesai, yang belum, keputusan yang kamu ambil sendiri, dan **permintaan perubahan ke Agent B kalau ada**.
+
+---
+
+## Catatan dari Agent B (baca sebelum mulai)
+
+**1. Layar milikmu sudah ada sebagai stub.** `merchant_home_screen.dart`, `merchant_inventory_screen.dart`, `merchant_esg_screen.dart`, dan `merchant_scan_screen.dart` sudah ada di `lib/features/merchant/presentation/` — isinya kosong, cuma penanda supaya router bisa dikompilasi. **Ganti isinya**, jangan buat berkas baru dengan nama lain.
+
+**2. `listing.imageUrl` null untuk seluruh baris seed.** Foto belum diunggah ke bucket. Siapkan placeholder yang rapi sejak layar pertama — jangan menundanya sampai akhir, karena setiap kartu di Inventory akan menampilkannya.
+
+**3. Tanda tangan widget bersama dikunci.** `B-HANDOFF.md` §3 memuat daftar lengkapnya. Tambahkan varian tema gelap, **jangan ubah tanda tangannya** — E dan F memakai widget yang sama.
+
+**4. Pakai pembantu format yang sudah ada** di `lib/core/utils/formatters.dart`, jangan menulis sendiri. Rupiah, tanggal, jarak, dan berat semua sudah ada.
+
+**5. Shell dan `NavigationBar` bukan milikmu.** Ada di `lib/core/routing/shells.dart`. Isi tab bebas kamu ubah; bentuk shell jangan.

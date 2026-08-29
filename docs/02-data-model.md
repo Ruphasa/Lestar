@@ -460,3 +460,35 @@ BERAT_PORSI_KG  gorengan 0.15 · nasi_lauk 0.35 · roti 0.08 · kue 0.05 · minu
 | `waste_repository` | idem | + query geo |
 | `order_repository` | idem | join `order_items` |
 | `user_repository` | `profile_repository` | pecah tiga model |
+
+## 12. Nilai default yang sempat tidak tertulis
+
+Ditemukan saat Agent B mengimplementasikan `fallback_engine.dart`.
+
+| Konstanta | Default | Alasan |
+|---|---|---|
+| `beratPorsiDefaultKg` | **0.20** | sudah tertulis di §10, sama dengan `lainnya` |
+| `shelfLifeDefaultJam` | **8** | **tidak** tertulis di §10. Agent B memilih 8 jam — sama dengan `nasi_lauk`, kategori paling umum |
+
+Keduanya wajib sama di **Dart, Python, dan SQL**. Kalau berbeda, triage untuk kategori di luar daftar akan berselisih antara aplikasi dan server.
+
+## 13. Pembulatan lintas bahasa — jebakan nyata
+
+`round()` bawaan Python membulatkan setengah ke genap; Dart membulatkan menjauhi nol.
+
+```
+92.5  →  Python round() = 92     Dart .round() = 93
+```
+
+Bukan masalah teoretis: input triage `lainnya · 1 jam · 28°C` menghasilkan tepat `92.5`.
+
+Sisi Python **wajib** memakai pembulatan menjauhi nol supaya cocok dengan aplikasi:
+```python
+import math
+def round_half_away(x: float) -> int:
+    return int(math.floor(x + 0.5)) if x >= 0 else int(math.ceil(x - 0.5))
+```
+
+Berlaku untuk skor triage **dan** pembulatan harga di pricing.
+
+Sepuluh input uji paritas ada di `06-agent-briefs/B-HANDOFF.md` §12 — angka harapannya dihitung tangan dari rumus, bukan diambil dari salah satu implementasi.

@@ -96,7 +96,32 @@ Model dimuat sekali saat startup lewat `lifespan`, bukan per request.
 
 Rumus `triage` dan `pricing` ada dua kali: di Python milikmu dan di Dart milik Agent B. Ini disengaja, supaya app tetap berfungsi penuh tanpa server.
 
-Tulis 10 kasus uji dengan input dan keluaran yang diharapkan. Kirim ke Agent B supaya versi Dart-nya bisa diverifikasi menghasilkan angka yang sama persis.
+**Agent B sudah menyiapkan 10 kasus uji untukmu** di `docs/06-agent-briefs/B-HANDOFF.md` §12. Angka harapannya dihitung tangan dari rumus di `04-ai-pipeline.md` §4, bukan diambil dari keluaran Dart — jadi keduanya diuji melawan spec, bukan melawan satu sama lain. Salin apa adanya.
+
+### ⚠ Jebakan pembulatan lintas bahasa — ini akan menggigit
+
+**`round()` bawaan Python membulatkan setengah ke genap. Dart membulatkan menjauhi nol.**
+
+```
+92.5  →  Python round() = 92     Dart .round() = 93
+```
+
+Ini bukan masalah teoretis. Kasus uji `lainnya · 1 jam · 28°C` menghasilkan tepat `92.5`. Kalau kamu memakai `round()` bawaan, skormu akan berbeda 1 dari aplikasi — dan selisih itu baru ketahuan saat demo, sebagai skor triage yang tidak cocok antara layar dan server.
+
+Pakai pembulatan menjauhi nol, samakan dengan Dart:
+```python
+import math
+def round_half_away(x: float) -> int:
+    return int(math.floor(x + 0.5)) if x >= 0 else int(math.ceil(x - 0.5))
+```
+
+Berlaku untuk `triage.score` **dan** pembulatan harga di `pricing`.
+
+### Nilai default yang tidak tertulis di dokumen
+
+`02-data-model.md` §10 menyebut default berat porsi (0,20) tapi **tidak** menyebut default umur simpan. Agent B memilih **8 jam** untuk kategori di luar daftar — sama dengan `nasi_lauk`, kategori paling umum.
+
+**Pakai angka yang sama.** Kalau berbeda, triage untuk kategori tak dikenal akan berselisih antara app dan server.
 
 ## Rahasia
 

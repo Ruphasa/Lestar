@@ -15,7 +15,7 @@ Selasa  G   (bebas, bisa kapan saja)
 | # | Agent | Jalankan setelah | Perkiraan | Catatan |
 |---|---|---|---|---|
 | 1 | [A.md](A.md) | — | ✅ **selesai** | Semua gerbang lolos. Lihat `A-HANDOFF.md` |
-| 2 | [B.md](B.md) | A selesai | 5–7 jam | Leher botol. Pakai `/writing-plans` dulu |
+| 2 | [B.md](B.md) | A selesai | ✅ **selesai** | 5.115 baris, 59 test lolos, analyze bersih |
 | 3 | [C.md](C.md) | A selesai | 4–6 jam | **Paralel dengan B.** Sesi terpisah |
 | 4 | [D.md](D.md) | B selesai | 5–7 jam | UI merchant |
 | 5 | [E.md](E.md) | B selesai | 5–7 jam | UI konsumen |

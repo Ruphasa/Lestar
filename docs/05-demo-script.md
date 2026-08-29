@@ -92,12 +92,14 @@ Tekan **Apply recommended order**.
 
 **Inventory → Tambah Surplus**
 - Foto croissant
-- Kategori: roti · Qty: 12 · Dimasak: 14.00 · Harga normal: Rp88.000
+- Kategori: roti · Qty: 12 · Dimasak: 13.00 · Harga normal: Rp88.000
 
 Sistem menampilkan hasil triage:
-- **Skor 82 → jalur B2C**
-- Alasan: *"Dimasak 7 jam lalu, kategori roti tahan 24 jam. Kondisi suhu normal."*
-- Perhitungan: `100 − (7/24) × 60 = 82`
+- **Skor 80 → jalur B2C**
+- Alasan: *"Dimasak 8 jam lalu, kategori roti tahan 24 jam. Kondisi suhu normal."*
+- Perhitungan: `100 − (8/24) × 60 = 80`
+
+> Angka ini sengaja bulat. Jam masak 14.00 menghasilkan `82,5`, dan pembulatan setengah berbeda antara Dart dan Python — Dart membulatkan menjauhi nol (83), Python membulatkan ke genap (82). Skor bulat menghilangkan satu hal yang bisa dipersoalkan juri sekaligus satu sumber selisih antar-implementasi.
 
 Muncul tombol **"Validasi Kondisi Fisik Aman"**.
 

@@ -193,3 +193,19 @@ Warisi `partner_subscription_screen.dart` dari Ecobite (189 baris), **sederhanak
 ## Sebelum menutup sesi
 
 Tulis ringkasan di `docs/06-agent-briefs/F-HANDOFF.md`: layar yang selesai, yang belum, keputusan yang kamu ambil sendiri, dan permintaan perubahan ke Agent B kalau ada.
+
+---
+
+## Catatan dari Agent B (baca sebelum mulai)
+
+**1. Layar milikmu sudah ada sebagai stub.** `partner_home_screen.dart`, `partner_riwayat_screen.dart`, `partner_langganan_screen.dart` sudah ada di `lib/features/partner/presentation/` — isinya kosong. **Ganti isinya**, jangan buat berkas baru.
+
+**2. `flutter_map` versi 8, bukan 7.** API berubah: `MapOptions(center:, zoom:)` jadi `MapOptions(initialCenter:, initialZoom:)`. `LestarMap` sudah memakai v8.
+
+**3. Model `partner_subscriptions` belum ada.** Agent B sengaja melewatkannya karena layar langganan ada di urutan pertama daftar korban. **Kalau kamu jadi membangun layar LANGGANAN, minta modelnya dulu** — Agent B memperkirakan sepuluh menit. Kalau waktu mepet, cukup tampilkan status berlangganan dari `partners.subscription_expiry` tanpa alur pembayaran.
+
+**4. Tanda tangan widget bersama dikunci.** `B-HANDOFF.md` §3.
+
+**5. Shell dan `NavigationBar` bukan milikmu.** Ada di `lib/core/routing/shells.dart`. Bentuknya jangan diubah, isinya bebas.
+
+**6. Keputusanmu tidak memakai `BackdropFilter` sudah tepat** — Agent B mencatat blur adalah hal yang paling mungkin lambat di HP entry-level seperti milik Pak Budi.

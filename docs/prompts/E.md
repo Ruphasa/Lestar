@@ -168,3 +168,19 @@ Boleh minimalis — tidak ada di jalur demo.
 ## Sebelum menutup sesi
 
 Tulis ringkasan di `docs/06-agent-briefs/E-HANDOFF.md`: layar yang selesai, yang belum, keputusan yang kamu ambil sendiri, dan permintaan perubahan ke Agent B kalau ada.
+
+---
+
+## Catatan dari Agent B (baca sebelum mulai)
+
+**1. Layar milikmu sudah ada sebagai stub.** `radar_screen.dart`, `feed_screen.dart`, `qr_screen.dart`, `orders_screen.dart`, `profile_screen.dart` sudah ada di `lib/features/consumer/presentation/` — isinya kosong. **Ganti isinya**, jangan buat berkas baru.
+
+**2. `listing.imageUrl` null untuk seluruh baris seed.** Foto belum diunggah ke bucket. Radar dan Feed-mu penuh kartu bergambar — siapkan placeholder yang rapi sejak awal, jangan ditunda.
+
+**3. `flutter_map` versi 8, bukan 7.** API berubah: `MapOptions(center:, zoom:)` jadi `MapOptions(initialCenter:, initialZoom:)`. `LestarMap` di `lib/shared/widgets/lestar_map.dart` sudah memakai v8. Kalau mencari contoh di internet, pastikan contohnya untuk v8.
+
+**4. Tanda tangan widget bersama dikunci.** `B-HANDOFF.md` §3. Tambahkan varian tema terang, jangan ubah tanda tangannya.
+
+**5. Pakai `lib/core/utils/formatters.dart`** untuk rupiah, jarak, dan waktu — jangan menulis sendiri.
+
+**6. Shell dan `NavigationBar` bukan milikmu.** Ada di `lib/core/routing/shells.dart`.

@@ -136,10 +136,10 @@ Daftar listing merchant + tombol tambah surplus.
 
    ┌──────────────────────────────────┐
    │  Skor Keamanan Pangan            │
-   │         82 / 100                 │
+   │         80 / 100                 │
    │      ● Jalur B2C                 │
    │                                  │
-   │  Dimasak 7 jam lalu, kategori    │
+   │  Dimasak 8 jam lalu, kategori    │
    │  roti tahan 24 jam. Kondisi      │
    │  suhu normal.                    │
    └──────────────────────────────────┘
