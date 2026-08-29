@@ -1,0 +1,61 @@
+name: lestar
+description: "Lestar — platform ekonomi sirkular tiga sisi."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.9.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.9
+
+  # State & navigasi (warisan Ecobite)
+  flutter_riverpod: ^3.4.2
+  go_router: ^18.0.0
+
+  # Data — pengganti seluruh Firebase
+  supabase_flutter: ^2.17.2
+
+  # Peta & lokasi
+  flutter_map: ^8.3.2
+  latlong2: ^0.10.1
+  geolocator: ^14.0.3
+
+  # Laporan ESG
+  pdf: ^3.13.0
+  printing: ^5.15.0
+
+  # Utilitas
+  intl: ^0.20.3
+  qr_flutter: ^4.1.0
+  mobile_scanner: ^7.4.0
+  fl_chart: ^1.2.0
+  image_picker: ^1.2.3
+  uuid: ^4.6.0
+  http: ^1.6.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/logo.png
+
+  # Variable font — satu berkas melayani semua bobot.
+  # Bobot diatur lewat fontVariations, bukan fontWeight. Lihat LestarType.
+  # Sengaja tidak memakai paket google_fonts: font itu diambil lewat jaringan
+  # dan akan jatuh ke fallback sistem saat WiFi dimatikan di penutup demo.
+  fonts:
+    - family: PlusJakartaSans
+      fonts:
+        - asset: assets/fonts/PlusJakartaSans[wght].ttf
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter[opsz,wght].ttf
