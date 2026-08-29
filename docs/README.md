@@ -39,7 +39,7 @@ Platform ekonomi sirkular tiga sisi. Demo **Rabu 2 September 2026**.
 
 Aturan main lengkap: [`06-agent-briefs/README.md`](06-agent-briefs/README.md)
 
-**Mulai dari sini:** [`06-agent-briefs/START-A.md`](06-agent-briefs/START-A.md) — prompt pembuka, gerbang verifikasi, dan tiga jebakan yang memakan waktu
+**Prompt siap tempel:** [`prompts/`](prompts/) — satu berkas per agent (A–G), salin seluruh isinya ke sesi baru. Urutan dan dependensi ada di [`prompts/README.md`](prompts/README.md)
 
 ## Yang tidak boleh dilanggar
 
