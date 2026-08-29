@@ -16,7 +16,7 @@ dependencies:
   flutter_riverpod: ^3.4.2
   go_router: ^18.0.0
 
-  # Data — pengganti seluruh Firebase
+  # Data — satu-satunya backend, menggantikan seluruh tumpukan lama
   supabase_flutter: ^2.17.2
 
   # Peta & lokasi
