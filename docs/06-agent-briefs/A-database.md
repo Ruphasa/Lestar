@@ -63,7 +63,9 @@ Satu migration satu tujuan. Jangan gabung semua jadi satu file — kalau ada yan
 
 **`on_auth_user_created`** pada `auth.users` — membuat baris `profiles` otomatis dengan `role` dari `raw_user_meta_data`.
 
-**`sync_qty_remaining`** pada `order_items` — saat order berubah `claimed`, kurangi `listings.qty_remaining`. Kalau jadi 0, ubah status jadi `sold_out`.
+**`sync_qty_remaining`** — saat order berubah `claimed`, kurangi `listings.qty_remaining`. Kalau jadi 0, ubah status jadi `sold_out`.
+
+> **Terbangun di `orders`, bukan `order_items`.** Instruksi awal di sini keliru: pemicunya adalah perubahan `orders.status`, sementara baris `order_items` sendiri tidak berubah saat itu. Trigger membaca `order_items` milik order tersebut lalu mengurangi stok.
 
 **`write_esg_event`** pada `orders` dan `waste_batches` — saat status jadi `claimed` / `completed`, tulis baris `esg_events` dengan `co2_saved_kg = weight_kg * 0.25`.
 

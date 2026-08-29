@@ -74,13 +74,19 @@ ConsumerShell
 
 Tata letak persis di `E-ui-consumer.md`. `flutter_map` + tile OpenStreetMap.
 
-**Jarak dihitung di database, bukan di Dart:**
+**Jarak dihitung di database, bukan di Dart.** Tanda tangan persis dari Agent A — perhatikan awalan `p_`:
 ```dart
-supabase.rpc('nearby_listings', params: {
-  'lat': posisi.latitude, 'lng': posisi.longitude, 'radius_km': 5,
-});   // mengembalikan listing + jarak_km, sudah terurut
+final rows = await supabase.rpc('nearby_listings', params: {
+  'p_lat': posisi.latitude,
+  'p_lng': posisi.longitude,
+  'p_radius_km': 5,
+});
 ```
+Kembaliannya **sudah termasuk data merchant** — `store_name`, `store_address`, `store_image` — plus `jarak_km`, terurut menaik. Tidak perlu query kedua untuk nama toko.
+
 Jangan hitung haversine manual lalu saring di klien — lebih lambat, dan menarik seluruh tabel ke perangkat.
+
+**Catatan keterbatasan yang sudah diketahui:** stok berkurang saat status `claimed`, bukan saat `paid`. Artinya dua konsumen bisa memesan porsi yang sama sebelum salah satunya datang mengambil. Untuk demo tidak masalah — jangan diperbaiki, dan jangan menambah pengecekan stok di klien yang bisa membuat alur pesan gagal saat demo.
 
 **`DiscountPill`** — isian oranye, teks hitam. Ukuran mengikuti besar diskon: makin besar diskon, makin besar pill. Mata langsung tertarik ke penawaran terbaik tanpa membaca.
 

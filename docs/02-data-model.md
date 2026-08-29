@@ -330,9 +330,40 @@ Ketiganya penggerak Radar dan status klaim langsung. Tabel lain tidak perlu real
 
 ## 9. Auto-cascade
 
-Edge Function `auto_cascade`, dipanggil `pg_cron` tiap 5 menit.
+> **Terbangun — berbeda dari rancangan awal, dan lebih baik.** Bagian ini sudah diperbarui mengikuti implementasi Agent A. Lihat `06-agent-briefs/A-HANDOFF.md` untuk alasan lengkapnya.
 
-Logika fungsi:
+Logika kaskade hidup di **satu tempat**: fungsi Postgres `run_auto_cascade()`.
+
+```
+run_auto_cascade(p_force boolean default false,
+                 p_merchant_id uuid default null) returns json
+```
+
+- Edge Function `auto_cascade` hanya membungkusnya lewat HTTP
+- `pg_cron` memanggil fungsinya langsung di dalam database
+
+Akibatnya cron dan pemicu manual menjalankan kode yang **benar-benar sama** — bukan dua jalur yang bisa menyimpang. Dan karena cron tidak perlu memanggil HTTP keluar, **service role key tidak pernah masuk ke SQL**, sehingga Supabase Vault tidak dipakai sama sekali. Rancangan awal di dokumen ini lebih rumit tanpa alasan.
+
+Balikan: `{"cascaded": n, "waste_batches_created": n, "total_kg": x}`
+
+### Dua parameter demo
+
+| Parameter | Untuk apa |
+|---|---|
+| `p_force` | Lewati pengecekan `cutoff_time`. Demo berlangsung pagi hari sementara cutoff jam 22.00 |
+| `p_merchant_id` | Batasi ke satu merchant. **Wajib diisi saat demo** |
+
+Tanpa `p_merchant_id`, kaskade paksa akan menyeret 12 listing panggung merchant lain dan mengosongkan radar konsumen tepat sebelum menit 5:00 demo.
+
+### Job cron sengaja dimatikan
+
+`cron.schedule('lestar-auto-cascade', ...)` dibuat lalu langsung di-`alter_job(active := false)`.
+
+Alasannya terbukti saat pengujian Agent A: begitu jam melewati `cutoff_time`, satu putaran cron mengubah **6 dari 12 listing panggung** menjadi `cascaded` dan radar konsumen ikut kosong. Kaskade yang dipakai di depan juri adalah pemicu manual, jadi cron tidak menambah apa pun selain risiko data panggung berubah tanpa ada yang menekan tombol.
+
+Nyalakan kembali hanya di luar masa demo.
+
+### Logika yang dijalankan
 ```
 SELECT listings l JOIN merchants m ON l.merchant_id = m.id
 WHERE l.status = 'live'
@@ -353,7 +384,49 @@ untuk tiap baris:
 
 Berat porsi per kategori (kg): gorengan 0,15 · nasi/lauk 0,35 · roti 0,08 · kue 0,05 · minuman 0,30 · lainnya 0,20
 
-**Catatan demo:** fungsi ini juga harus bisa dipanggil manual lewat tombol tersembunyi di build demo, supaya kaskade bisa dipicu tepat waktu di depan juri tanpa menunggu cron.
+## 9b. Fungsi yang bisa dipanggil dari Flutter
+
+Tanda tangan persis, diambil dari database yang sudah jadi. **Perhatikan awalan `p_` pada semua parameter.**
+
+```
+nearby_listings(p_lat float8, p_lng float8, p_radius_km float8 default 5)
+  → TABLE(id, merchant_id, store_name, store_address, store_image,
+          name, description, category, image_url, qty_remaining,
+          original_price, price, cooked_at, expires_at,
+          triage_score, triage_reason, lat, lng, jarak_km)
+
+nearby_waste(p_lat float8, p_lng float8, p_radius_km float8 default 10)
+  → TABLE(id, source_merchant_id, store_name, source_listing_id,
+          waste_type, description, weight_kg, price, pickup_address,
+          lat, lng, pickup_window_start, pickup_window_end,
+          image_url, status, created_at, jarak_km)
+
+run_auto_cascade(p_force bool default false, p_merchant_id uuid default null)
+  → json
+```
+
+Kedua RPC geo **sudah menyertakan data merchant** (`store_name`, `store_address`, `store_image`) dan `jarak_km` terurut menaik. Tidak perlu query kedua untuk nama toko.
+
+### Konstanta versi SQL
+
+Agent A membuat versi SQL dari konstanta bersama, dipakai trigger ESG dan auto-cascade:
+
+```
+berat_porsi_kg(p_category text) → numeric
+faktor_co2_per_kg()            → numeric
+```
+
+**Nilainya wajib sama persis dengan `lib/core/constants.dart` dan `api/constants.py`.** Kalau berbeda, laporan ESG dan berat kaskade akan berselisih tanpa ada yang menyadarinya sampai demo.
+
+## 9c. Catatan implementasi lain dari Agent A
+
+| Hal | Kenyataan | Dampak |
+|---|---|---|
+| Ekstensi geo | dipasang di schema `extensions`, bukan `public` | pemanggilan di-qualify (`extensions.ll_to_earth`). Tidak berdampak ke Flutter — hanya memanggil RPC |
+| `sync_qty_remaining` | dipasang di **`orders`**, bukan `order_items` | benar: pemicunya perubahan `orders.status` jadi `claimed`; baris `order_items` tidak berubah saat itu |
+| Stok berkurang | saat `claimed`, bukan `paid` | dua konsumen bisa memesan porsi yang sama sebelum salah satunya mengambil. **Diterima untuk demo**, jangan diperbaiki sekarang |
+| `write_esg_event` | dipecah `_order` dan `_waste`, ditaruh di `0005` | idempoten lewat `unique (event_type, ref_id)` |
+| RPC geo | ditaruh di `0004_b2b.sql` | jumlah migration tetap 11 (+ `0011` dari review) |
 
 ## 10. Konstanta bersama
 

@@ -107,9 +107,10 @@ Perhatikan bedanya: pill diskon di peta itu **penawaran** (oranye), badge AI di 
 **Jarak dihitung di database, bukan di Dart.** Agent A menyediakan fungsi RPC yang memakai ekstensi `earthdistance` + index GiST:
 ```dart
 supabase.rpc('nearby_listings', params: {
-  'lat': posisi.latitude, 'lng': posisi.longitude, 'radius_km': 5,
-});   // mengembalikan listing + kolom jarak_km, sudah terurut
+  'p_lat': posisi.latitude, 'p_lng': posisi.longitude, 'p_radius_km': 5,
+});   // listing + store_name/address/image + jarak_km, sudah terurut
 ```
+Awalan `p_` wajib — itu nama parameter sebenarnya di database. Kembaliannya sudah menyertakan data merchant, jadi tidak perlu query kedua untuk nama toko.
 Jangan hitung haversine manual lalu saring di klien — lebih lambat, dan menarik seluruh tabel ke perangkat.
 
 ### 3. Realtime — ini yang didemokan

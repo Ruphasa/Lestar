@@ -111,6 +111,20 @@ Croissant 5 pcs  →  tidak terklaim 21.00  →  dialihkan ke Pak Budi 21.05
 ```
 Ini yang membuktikan kaskade benar terjadi, bukan diceritakan.
 
+**Tombol pemicu kaskade manual** (build demo saja, `--dart-define=DEMO=true`).
+
+Job cron sengaja dimatikan Agent A: satu putaran cron mengubah 6 dari 12 listing panggung jadi `cascaded` dan mengosongkan radar konsumen. Kaskade saat demo **harus** dipicu manual.
+
+```dart
+await supabase.rpc('run_auto_cascade', params: {
+  'p_force': true,                       // demo pagi hari, cutoff jam 22.00
+  'p_merchant_id': merchant.id,          // WAJIB — batasi ke merchant ini saja
+});
+// balikan JSON: {"cascaded": n, "waste_batches_created": n, "total_kg": x}
+```
+
+**`p_merchant_id` tidak boleh dilewatkan kosong.** Tanpa itu, kaskade paksa akan menyeret 12 listing panggung merchant lain dan mengosongkan radar konsumen tepat sebelum menit 5:00 demo.
+
 **3. Scan QR**
 
 Warisi `merchant_scan_qr_screen.dart` dari Ecobite (638 baris, `mobile_scanner` sudah terpasang). Ganti sumber data ke `order_repository.claimByQr()`.

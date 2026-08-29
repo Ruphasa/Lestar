@@ -110,13 +110,16 @@ Halo, Pak Budi
 [🏠 BERANDA] [✓ RIWAYAT] [💳 LANGGANAN]
 ```
 
-Sumber data — RPC dari Agent A:
+Sumber data — RPC dari Agent A. Tanda tangan persis, perhatikan awalan `p_`:
 ```dart
-supabase.rpc('nearby_waste', params: {
-  'lat': partner.baseLat, 'lng': partner.baseLng,
-  'radius_km': partner.serviceRadiusKm,
-});   // waste_batches + jarak_km, terurut terdekat
+final rows = await supabase.rpc('nearby_waste', params: {
+  'p_lat': partner.baseLat,
+  'p_lng': partner.baseLng,
+  'p_radius_km': partner.serviceRadiusKm,
+});
 ```
+Kembaliannya **sudah termasuk `store_name` merchant asal** dan `jarak_km`, terurut menaik. Tidak perlu query kedua untuk nama toko — kamu butuh itu di layar "SEDANG MENUJU".
+
 Saring lagi ke `waste_preference` partner (`wet` / `dry`).
 
 **Tampilkan jarak yang terdekat, dan jumlahkan seluruh beratnya jadi satu angka besar.** Itulah `25 KG` di mockup. **Jangan tampilkan daftar.**

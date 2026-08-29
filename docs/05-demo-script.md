@@ -52,11 +52,21 @@ Aktif **hanya** di build demo: `flutter build apk --release --dart-define=DEMO=t
 Ini alat bantu presentasi, bukan fitur palsu. Kalau juri bertanya, sebut apa adanya: *"Ini pintasan demo supaya kami tidak menghabiskan waktu Bapak/Ibu untuk logout-login."*
 
 ### 4.2 Pemicu kaskade manual
-Cron berjalan tiap 5 menit — terlalu lambat dan tidak bisa diprediksi saat demo.
 
-**Solusi:** di build demo, tombol tersembunyi di layar Inventory merchant memanggil Edge Function `auto_cascade` langsung. Kaskade terjadi tepat saat dibutuhkan.
+**Job cron sengaja dimatikan.** Agent A menemukan saat pengujian: begitu jam melewati `cutoff_time`, satu putaran cron mengubah 6 dari 12 listing panggung jadi `cascaded` dan mengosongkan radar konsumen. Cron tidak menambah apa pun selain risiko panggung berubah tanpa ada yang menekan tombol.
 
-Logika yang dijalankan **identik** dengan yang dipanggil cron. Bukan jalur berbeda, hanya pemicu berbeda.
+Di build demo, tombol tersembunyi di layar Inventory merchant memanggil:
+
+```dart
+await supabase.rpc('run_auto_cascade', params: {
+  'p_force': true,               // demo pagi hari, cutoff jam 22.00
+  'p_merchant_id': merchant.id,  // WAJIB
+});
+```
+
+**`p_merchant_id` wajib diisi.** Tanpa itu, kaskade paksa menyeret 12 listing panggung merchant lain dan mengosongkan radar konsumen tepat sebelum menit 5:00.
+
+Logika yang dijalankan **identik** dengan yang dipanggil cron — keduanya memanggil fungsi Postgres `run_auto_cascade()` yang sama. Bukan jalur berbeda, hanya pemicu berbeda.
 
 ## 5. Skenario menit per menit
 

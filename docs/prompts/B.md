@@ -63,6 +63,8 @@ Terjemahan: `collection().snapshots()` → `supabase.from(...).stream(primaryKey
 
 **5. Konstanta** — `lib/core/constants.dart`, semua nilai dari `02-data-model.md` §10. Satu tempat, tidak ditulis ulang di berkas lain.
 
+Agent A sudah membuat versi SQL-nya: fungsi `berat_porsi_kg(p_category text)` dan `faktor_co2_per_kg()`. Keduanya dipakai trigger ESG dan auto-cascade. **Angka di Dart wajib sama persis dengan versi SQL.** Kalau berbeda, laporan ESG dan berat kaskade akan berselisih tanpa ada yang menyadarinya sampai demo.
+
 **6. Font** — berkas sudah ada di `assets/fonts/` (`PlusJakartaSans[wght].ttf`, `Inter[opsz,wght].ttf`). Daftarkan di `pubspec.yaml`.
 Ini **variable font**: satu berkas untuk semua bobot, diatur lewat `fontVariations`, bukan `fontWeight`. **Jangan pakai paket `google_fonts`** — paket itu mengambil font lewat jaringan, dan saat WiFi dimatikan di penutup demo teks akan jatuh ke fallback sistem. Uji dengan mode pesawat.
 

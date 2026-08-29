@@ -1,3 +1,11 @@
+> ✅ **SELESAI 29 Agustus 2026.** Semua gerbang lolos, diverifikasi ulang lewat review.
+> Hasil dan sepuluh keputusan Agent A ada di [`A-HANDOFF.md`](A-HANDOFF.md).
+> Berkas ini disimpan sebagai catatan. **Jangan dijalankan ulang** — database sudah terisi.
+>
+> Satu instruksi di bawah ternyata tidak diperlukan: **Supabase Vault tidak dipakai.**
+> `run_auto_cascade()` hidup sebagai fungsi Postgres dan cron memanggilnya langsung
+> di dalam database, jadi service role key tidak pernah masuk ke SQL.
+
 # Cara Memulai Agent A
 
 **Waktu perkiraan** 3–5 jam · **Memblokir** B, C, D, E, F · **Kerjakan pertama**

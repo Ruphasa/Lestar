@@ -116,10 +116,11 @@ Halo, Pak Budi
 
 ```dart
 supabase.rpc('nearby_waste', params: {
-  'lat': partner.baseLat, 'lng': partner.baseLng,
-  'radius_km': partner.serviceRadiusKm,
-});   // mengembalikan waste_batches + jarak_km, terurut terdekat
+  'p_lat': partner.baseLat, 'p_lng': partner.baseLng,
+  'p_radius_km': partner.serviceRadiusKm,
+});   // waste_batches + store_name merchant asal + jarak_km, terurut terdekat
 ```
+Awalan `p_` wajib — itu nama parameter sebenarnya di database. Kembaliannya sudah menyertakan `store_name`, yang kamu butuhkan di layar "SEDANG MENUJU".
 
 Saring lagi ke `waste_preference` partner (`wet` / `dry`). Kalau ada beberapa batch, tampilkan **jarak yang terdekat** dan **jumlahkan seluruh beratnya** jadi satu angka besar — itulah `25 KG` di mockup. Jangan tampilkan daftar.
 

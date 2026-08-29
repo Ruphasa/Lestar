@@ -14,7 +14,7 @@ Selasa  G   (bebas, bisa kapan saja)
 
 | # | Agent | Jalankan setelah | Perkiraan | Catatan |
 |---|---|---|---|---|
-| 1 | [A.md](A.md) | — | 3–5 jam | **Kerjakan pertama.** Memblokir semua |
+| 1 | [A.md](A.md) | — | ✅ **selesai** | Semua gerbang lolos. Lihat `A-HANDOFF.md` |
 | 2 | [B.md](B.md) | A selesai | 5–7 jam | Leher botol. Pakai `/writing-plans` dulu |
 | 3 | [C.md](C.md) | A selesai | 4–6 jam | **Paralel dengan B.** Sesi terpisah |
 | 4 | [D.md](D.md) | B selesai | 5–7 jam | UI merchant |
