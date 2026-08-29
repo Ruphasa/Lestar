@@ -43,6 +43,14 @@ class DarkGlassTheme {
         borderRadius: BorderRadius.circular(LestarTokens.radiusKartu),
       ),
     ),
+    // Indikator nav dipaksa hijau. Material 3 memakai `secondaryContainer`
+    // untuk indikator, dan `secondaryContainer` kita bernuansa oranye —
+    // padahal oranye disediakan khusus untuk uang dan peringatan. Tanpa
+    // baris ini, tab aktif tampil oranye dan hierarki warnanya rusak.
+    navigationBarTheme: const NavigationBarThemeData(
+      indicatorColor: LestarTokens.forest,
+      backgroundColor: LestarTokens.inkSoft,
+    ),
     // Agent D: perkaya di sini. Jangan mengubah tiga hal di atas.
   );
 }

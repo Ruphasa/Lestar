@@ -73,6 +73,23 @@ void main() {
     expect(themeForRole(null), LightGlassTheme.data);
   });
 
+  test('indikator nav hijau, bukan oranye', () {
+    // Material 3 memakai colorScheme.secondaryContainer untuk indikator
+    // NavigationBar. secondaryContainer kita bernuansa oranye, dan oranye
+    // hanya untuk uang dan peringatan — jadi indikatornya dipaksa hijau.
+    for (final t in [
+      LightGlassTheme.data,
+      DarkGlassTheme.data,
+      PlainTheme.data,
+    ]) {
+      final indikator = t.navigationBarTheme.indicatorColor;
+      expect(indikator, isNotNull);
+      expect(indikator, isNot(LestarTokens.orange));
+      expect(indikator, isNot(LestarTokens.orangeText));
+      expect(indikator, isNot(LestarTokens.orangeTint));
+    }
+  });
+
   test('kontrak warna tema yang tidak boleh diubah D/E/F', () {
     expect(LightGlassTheme.data.colorScheme.primary, LestarTokens.emeraldDeep);
     expect(DarkGlassTheme.data.colorScheme.primary, LestarTokens.emerald);
