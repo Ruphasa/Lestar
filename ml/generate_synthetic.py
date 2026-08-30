@@ -130,6 +130,7 @@ def generate() -> pd.DataFrame:
     tanggal = _tanggal()
     baris = []
     peringatan = []
+    di_luar_rentang = []
 
     for m in MERCHANTS:
         lo, hi = KATEGORI[m['kategori']]
@@ -157,6 +158,10 @@ def generate() -> pd.DataFrame:
         terjual = np.minimum(prod, demand)
         surplus_kg = np.maximum(0.0, prod - demand) * berat
 
+        surplus_rata2 = float(surplus_kg.mean())
+        if not (SURPLUS_TARGET_MIN <= surplus_rata2 <= SURPLUS_TARGET_MAX):
+            di_luar_rentang.append((m['nama'], m['kategori'], round(surplus_rata2, 3)))
+
         for i, ts in enumerate(tanggal):
             porsi = int(round(float(terjual[i])))
             baris.append({
@@ -175,6 +180,13 @@ def generate() -> pd.DataFrame:
               f'rentang faktor {FAKTOR_MIN}-{FAKTOR_MAX}:')
         for nama, kat, f, t in peringatan:
             print(f'    {nama:32s} {kat:9s} faktor={f} target={t} kg')
+
+    if di_luar_rentang:
+        print('\n  PERINGATAN — merchant dengan surplus RATA-RATA di luar rentang riset '
+              f'{SURPLUS_TARGET_MIN}-{SURPLUS_TARGET_MAX} kg/hari (lihat catatan di '
+              'test_generate.py::test_setiap_merchant_juga_masuk_rentang):')
+        for nama, kat, v in di_luar_rentang:
+            print(f'    {nama:32s} {kat:9s} surplus_rata2={v} kg')
 
     return pd.DataFrame(baris).sort_values(['merchant_id', 'date']).reset_index(drop=True)
 
