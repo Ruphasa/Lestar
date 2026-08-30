@@ -12,6 +12,7 @@ from datetime import date, datetime
 import numpy as np
 
 import gemini
+import weather
 from constants import BERAT_PORSI_DEFAULT_KG, normalisasi_weather, round_half_away
 from heuristik import NAMA_HARI, forecast_heuristik, rekomendasi_produksi
 from model_runtime import SCALER_GLOBAL_DEFAULT
@@ -66,6 +67,27 @@ def _dow(row: dict) -> int:
     if d is not None and 0 <= int(d) <= 6:
         return int(d)
     return _tanggal(str(row['date'])).weekday()
+
+
+def _kode_cuaca(req) -> int:
+    """Prioritas: yang dikirim klien, lalu OpenWeatherMap, lalu cerah.
+
+    Dipanggil dari `hitung_forecast` dan `hitung_forecast_dengan_gemini` --
+    satu tempat saja supaya jalur LSTM dan jalur di atasnya (Gemini) melihat
+    cuaca yang sama persis untuk request yang sama. `weather.ramalan_besok`
+    sendiri tidak pernah melempar (lihat weather.py); helper ini juga tidak
+    menyaring kembalian None-nya lebih jauh -- 0 di baris terakhir sudah
+    jadi jaring pengaman kalau kunci tidak ada, jaringan putus, atau
+    balasannya tidak terbaca.
+    """
+    if req.weather_forecast is not None:
+        return int(req.weather_forecast.code)
+    ctx = req.merchant_context
+    if ctx and ctx.lat is not None and ctx.lng is not None:
+        kode = weather.ramalan_besok(ctx.lat, ctx.lng)
+        if kode is not None:
+            return kode
+    return 0
 
 
 def rakit_window(history: list[dict], scalers: dict) -> tuple[np.ndarray, float]:
@@ -136,10 +158,17 @@ def narasi_template(demand_x: int, target_date: date, weather_code: int,
     )
 
 
-def hitung_forecast(req, runtime) -> dict:
-    """Hasil lapis LSTM, atau heuristik server kalau model tidak hidup."""
+def hitung_forecast(req, runtime, kode_cuaca: int | None = None) -> dict:
+    """Hasil lapis LSTM, atau heuristik server kalau model tidak hidup.
+
+    `kode_cuaca` boleh dititipkan oleh pemanggil (`hitung_forecast_dengan_gemini`)
+    supaya `_kode_cuaca` -- yang bisa memanggil OpenWeatherMap lewat jaringan --
+    dipanggil sekali saja per request, bukan dua kali. Dipanggil langsung tanpa
+    argumen ini (mis. lewat endpoint lain atau tes), helper dihitung di sini.
+    """
     target = _tanggal(req.target_date)
-    kode_cuaca = req.weather_forecast.code if req.weather_forecast else 0
+    if kode_cuaca is None:
+        kode_cuaca = _kode_cuaca(req)
     history = [h.model_dump() for h in req.history]
 
     if not runtime.loaded or len(history) < WINDOW:
@@ -183,12 +212,12 @@ def hitung_forecast_dengan_gemini(req, runtime) -> dict:
     """Lapis 1 di atas Lapis 2. Heuristik tidak pernah dikirim ke Gemini —
     LLM tidak boleh mengarang angka di atas angka yang bukan dari model.
     """
-    hasil = hitung_forecast(req, runtime)
+    kode_cuaca = _kode_cuaca(req)
+    hasil = hitung_forecast(req, runtime, kode_cuaca)
     if hasil['source'] != 'lstm_only':
         return hasil
 
     target = _tanggal(req.target_date)
-    kode_cuaca = req.weather_forecast.code if req.weather_forecast else 0
     ctx = req.merchant_context
     konteks = {
         'target_date': req.target_date,

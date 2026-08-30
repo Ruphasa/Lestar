@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 import forecast
 import gemini
 import main
+import weather
 from forecast import rekomendasi_produksi
 from heuristik import forecast_heuristik
 
@@ -291,3 +292,95 @@ def test_forecast_prediksi_nan_jatuh_ke_heuristik_bukan_500(monkeypatch, lifespa
         })
         assert r.status_code == 200
         assert r.json()['source'] == 'heuristic'
+
+
+# ─── Tugas 8: prioritas cuaca (klien -> OpenWeatherMap -> cerah). Tidak ada
+# tes di sini yang menyentuh jaringan -- weather.ramalan_besok selalu
+# dipalsukan lewat monkeypatch.
+
+
+def test_kode_cuaca_mengutamakan_yang_dikirim_klien(monkeypatch):
+    """Kalau klien mengirim weather_forecast, OpenWeatherMap tidak boleh
+    ditanya sama sekali -- Dart adalah sumber yang lebih baru."""
+    dipanggil = []
+    monkeypatch.setattr(weather, 'ramalan_besok', lambda *a, **k: dipanggil.append(1) or 3)
+
+    class _Req:
+        weather_forecast = type('W', (), {'code': 2})()
+        merchant_context = type('C', (), {'lat': -7.98, 'lng': 112.63})()
+
+    assert forecast._kode_cuaca(_Req()) == 2
+    assert dipanggil == []
+
+
+def test_kode_cuaca_jatuh_ke_openweathermap_saat_klien_tidak_kirim(monkeypatch):
+    """Tanpa weather_forecast tapi merchant_context membawa lat/lng ->
+    dipetakan dari OpenWeatherMap."""
+    monkeypatch.setattr(weather, 'ramalan_besok', lambda lat, lng, **k: 3)
+
+    class _Req:
+        weather_forecast = None
+        merchant_context = type('C', (), {'lat': -7.98, 'lng': 112.63})()
+
+    assert forecast._kode_cuaca(_Req()) == 3
+
+
+def test_kode_cuaca_cerah_kalau_tidak_ada_apa_apa(monkeypatch):
+    """Tanpa weather_forecast, tanpa lat/lng, atau OpenWeatherMap gagal ->
+    jatuh ke 0 (cerah), bukan error."""
+    monkeypatch.setattr(weather, 'ramalan_besok', lambda *a, **k: None)
+
+    class _Req:
+        weather_forecast = None
+        merchant_context = None
+
+    assert forecast._kode_cuaca(_Req()) == 0
+
+    class _ReqGagal:
+        weather_forecast = None
+        merchant_context = type('C', (), {'lat': -7.98, 'lng': 112.63})()
+
+    assert forecast._kode_cuaca(_ReqGagal()) == 0
+
+
+def test_forecast_endpoint_memakai_openweathermap_saat_klien_tidak_kirim_cuaca(monkeypatch, lifespan_asli):
+    """Ujung-ke-ujung lewat /forecast: tanpa weather_forecast tapi dengan
+    lat/lng, endpoint memanggil weather.ramalan_besok, bukan diam-diam
+    memakai 0."""
+    with TestClient(main.app) as klien:
+        _lewati_jika_model_tidak_termuat()
+        monkeypatch.setattr(weather, 'ramalan_besok', lambda lat, lng, **k: 3)
+        r = klien.post('/forecast', json={
+            'merchant_id': 'x',
+            'history': _history(),
+            'target_date': '2026-08-29',
+            'merchant_context': {'lat': -7.98, 'lng': 112.63},
+        })
+        assert r.status_code == 200
+        assert r.json()['source'] == 'lstm_only'
+
+
+def test_forecast_dengan_gemini_memanggil_openweathermap_sekali_saja(monkeypatch, lifespan_asli):
+    """Regresi: `hitung_forecast_dengan_gemini` memanggil `hitung_forecast`
+    di dalamnya. Kalau kode cuaca dihitung ulang di kedua tempat, permintaan
+    yang lolos ke kalibrasi Gemini akan menanyakan OpenWeatherMap dua kali,
+    menggandakan anggaran jaringan yang sudah ketat (2 detik cuaca + 3 detik
+    Gemini harus muat dalam anggaran 4 detik klien Dart)."""
+    with TestClient(main.app) as klien:
+        _lewati_jika_model_tidak_termuat()
+        hitungan = []
+
+        def _palsu(lat, lng, **k):
+            hitungan.append(1)
+            return 3
+
+        monkeypatch.setattr(weather, 'ramalan_besok', _palsu)
+        monkeypatch.delenv('GEMINI_API_KEY', raising=False)
+        r = klien.post('/forecast', json={
+            'merchant_id': 'x',
+            'history': _history(),
+            'target_date': '2026-08-29',
+            'merchant_context': {'lat': -7.98, 'lng': 112.63},
+        })
+        assert r.status_code == 200
+        assert len(hitungan) == 1
