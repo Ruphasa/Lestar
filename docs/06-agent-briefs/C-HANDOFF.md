@@ -341,6 +341,27 @@ Sebaran per kategori merchant (rata porsi, rata surplus kg), dihitung dari
   menetapkan lima endpoint (empat awal + `/esg-narrative`); `weather.py`
   adalah helper yang dipanggil dari dalam `/forecast` saat klien tidak
   mengirim `weather_forecast`-nya sendiri.
+- **Bukan setiap field bernama `code`/`weather_code` memakai skala yang
+  sama** — jangan asumsikan keseragaman meski `04-ai-pipeline.md` §4 dan
+  contoh `"weather_forecast": {"code": 0}` di dalamnya terlihat seperti
+  memakai skala yang sama dengan `history[].weather_code`. Tiga skala
+  beredar:
+  - `history[].weather_code` (dikirim Agent A lewat `sales_history`):
+    smallint **0..3** (0 cerah, 1 berawan, 2 mendung, 3 hujan).
+  - `weather_forecast.code` di badan permintaan `/forecast`
+    (`api/schemas.py:24-26`, `WeatherForecast.code`): **tidak dijamin
+    0..3.** Field ini `int` tak terbatas — pemanggil boleh mengirim skala
+    0..3 di atas, id kondisi OpenWeatherMap asli (`200`..`804`, lihat
+    `api/weather.py:kode_dari_owm`), atau skala ketiga yang didokumentasikan
+    `lib/core/fallback_engine.dart:44` ("memakai kode OpenWeatherMap: 60 ke
+    atas berarti hujan" — bukan id OWM asli, yang mulai dari `200`, jadi ini
+    skala sendiri milik `FallbackEngine`).
+  - `normalisasi_weather` (`api/constants.py:75`) adalah **satu-satunya**
+    fungsi yang melayani ketiga skala itu sekaligus dan mengembalikan
+    0..1 — ini sebabnya `api/heuristik.py` dan `api/forecast.py` wajib
+    memanggilnya, bukan menulis ulang ambang batasnya sendiri (lihat
+    riwayat commit `heuristik.py` untuk kasus id OWM `800` yang pernah
+    salah dibaca "hujan" gara-gara perbandingan `>= 60` inline).
 - **Satu baris pengecualian di `.gitignore`**: `ml/data/*.csv` mengabaikan
   seluruh CSV hasil generate (termasuk `train.csv` yang besar dan tidak
   perlu ikut commit), tapi baris berikutnya, `!ml/data/seed_sales_history.csv`,
@@ -486,13 +507,14 @@ hanya karena versi library-nya sama — keduanya terbukti tidak cukup.
 
 ### 6.5 Yang tidak dites — dicatat, bukan disembunyikan
 
-- `api/test_weather.py` cuma menguji dua kondisi: **tanpa kunci** dan
-  **jaringan melempar exception**. Jalur non-200, `list` hilang dari respons,
-  `list` kosong, `weather` hilang dari satu elemen, dan `id` hilang — semuanya
-  hanya tertangkap satu `except Exception` yang lebar, tidak ada satu pun
-  test yang mengunci perilaku itu. Kalau `except` itu pernah dipersempit demi
-  alasan lain, jalur-jalur itu mulai melempar ke `/forecast` tanpa ada test
-  yang menangkap regresinya.
+- ~~`api/test_weather.py` cuma menguji dua kondisi...`~~ **Ditutup di
+  konsolidasi akhir (item 3):** `api/test_weather.py` sekarang mengunci lima
+  jalur kegagalan `ramalan_besok` (status bukan 200, body tanpa `list`,
+  `list` kosong, entri tanpa `weather`, `weather[0]` tanpa `id` — semuanya
+  tetap `None`, tidak pernah melempar), semua batas persis `kode_dari_owm`
+  (199/200, 599/600, 699/700, 800..805, id di luar rentang, id negatif), dan
+  `tersedia()` langsung dengan/tanpa kunci. Semuanya lewat monkeypatch
+  `weather.httpx.get`, tidak ada satu pun yang menyentuh jaringan.
 - Faktor confidence "riwayat < 14 hari" (`n_hari/14`) di `04-ai-pipeline.md`
   §10 **ada di kode** (`_confidence` di `api/forecast.py`) dan **diuji
   langsung sebagai unit test**, tapi **tidak bisa dipicu lewat `/forecast`

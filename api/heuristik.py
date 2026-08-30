@@ -13,7 +13,12 @@ from __future__ import annotations
 import math
 from datetime import date
 
-from constants import BERAT_PORSI_DEFAULT_KG, DOW_MULTIPLIER, round_half_away
+from constants import (
+    BERAT_PORSI_DEFAULT_KG,
+    DOW_MULTIPLIER,
+    normalisasi_weather,
+    round_half_away,
+)
 
 NAMA_HARI = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu']
 
@@ -48,7 +53,13 @@ def forecast_heuristik(history: list[dict], target_date: date, weather_code: int
     avg7 = sum(float(h['portions_sold']) for h in tujuh) / len(tujuh)
 
     dow = DOW_MULTIPLIER[target_date.weekday()]
-    cuaca = 0.88 if weather_code >= 60 or weather_code == 3 else 1.0
+    # Ambang 0.7 sama dengan yang dipakai forecast.py (narasi_template,
+    # hitung_forecast_dengan_gemini) -- satu definisi "cuaca buruk" saja di
+    # seluruh layanan, lewat normalisasi_weather (api/constants.py). Sebelum
+    # ini heuristik.py punya perbandingan sendiri (`weather_code >= 60 or
+    # weather_code == 3`) yang salah untuk id OpenWeatherMap 800 (cerah):
+    # 800 >= 60 bernilai True, padahal normalisasi_weather(800) == 0.0.
+    cuaca = 0.88 if normalisasi_weather(weather_code) >= 0.7 else 1.0
     demand_x = avg7 * dow * cuaca
 
     terakhir = history[-1]
@@ -68,7 +79,7 @@ def forecast_heuristik(history: list[dict], target_date: date, weather_code: int
 
 def _narasi(demand_x: float, target_date: date, weather_code: int, surplus_y: float) -> str:
     hari = NAMA_HARI[target_date.weekday()]
-    cuaca = 'hujan' if weather_code >= 60 or weather_code == 3 else 'cerah'
+    cuaca = 'hujan' if normalisasi_weather(weather_code) >= 0.7 else 'cerah'
     risiko = 'cukup besar' if surplus_y >= 0.3 else 'kecil'
     return (
         f'Perkiraan untuk {hari}, cuaca {cuaca}: permintaan sekitar '

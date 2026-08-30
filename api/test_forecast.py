@@ -79,6 +79,61 @@ def test_heuristik_hujan_menurunkan_permintaan():
     assert hujan['demand_x'] < cerah['demand_x']
 
 
+# ─── Tugas 12 item 1: heuristik.py wajib memakai normalisasi_weather, bukan
+# ambang sendiri (`weather_code >= 60 or weather_code == 3`). Ambang lama itu
+# salah untuk id OpenWeatherMap 800 (cerah): 800 >= 60 bernilai True, padahal
+# normalisasi_weather(800) == 0.0.
+
+
+def test_heuristik_kode_0_sampai_3_tidak_berubah_setelah_perbaikan_item_1():
+    """Kode 0..3 adalah skala Agent A yang beredar sungguhan hari ini lewat
+    sales_history.weather_code. Perbaikan Item 1 tidak boleh mengubah hasil
+    untuk kode-kode ini -- hanya id OpenWeatherMap yang berubah."""
+    hist = _history()
+    hasil = {c: forecast_heuristik(hist, date(2026, 8, 29), c) for c in (0, 1, 2, 3)}
+    # 0, 1, 2 tetap dibaca "cerah" (perbandingan lama juga False untuk ketiganya)
+    assert hasil[0]['demand_x'] == hasil[1]['demand_x'] == hasil[2]['demand_x']
+    for c in (0, 1, 2):
+        assert 'cerah' in hasil[c]['narrative']
+    # 3 tetap satu-satunya kode 0..3 yang dibaca "hujan" (perbandingan lama
+    # juga True lewat cabang `== 3`)
+    assert hasil[3]['demand_x'] < hasil[0]['demand_x']
+    assert 'hujan' in hasil[3]['narrative']
+
+
+def test_heuristik_owm_800_kini_cerah_bukan_hujan():
+    """Regresi Item 1: id OWM 800 (cerah) dulu dibaca "hujan" oleh ambang
+    inline (`800 >= 60`) di heuristik.py, berbeda dari jalur LSTM yang lewat
+    normalisasi_weather(800) == 0.0. Sekarang keduanya sepakat: 800 == cerah,
+    sama seperti kode 0."""
+    hist = _history()
+    cerah_kanonik = forecast_heuristik(hist, date(2026, 8, 29), 0)
+    owm_800 = forecast_heuristik(hist, date(2026, 8, 29), 800)
+    assert owm_800['demand_x'] == cerah_kanonik['demand_x']
+    assert 'cerah' in owm_800['narrative']
+
+
+# ─── Tugas 12 item 2: weather_forecast.code >= 60 (skala FallbackEngine
+# Dart, BUKAN id OWM asli yang mulai dari 200) didokumentasikan tapi belum
+# pernah dites ujung-ke-ujung lewat /forecast sungguhan.
+
+
+def test_forecast_endpoint_menerima_kode_cuaca_skala_fallback_engine():
+    """History < WINDOW memaksa jalur heuristik supaya hasilnya deterministik
+    dan tidak bergantung pada model LSTM yang mungkin/tidak termuat."""
+    klien = TestClient(main.app)
+    body = {'merchant_id': 'x', 'history': _history(n=5), 'target_date': '2026-08-29'}
+    cerah = klien.post('/forecast', json={**body, 'weather_forecast': {'code': 0}})
+    hujan = klien.post('/forecast', json={**body, 'weather_forecast': {'code': 65}})
+    assert cerah.status_code == 200
+    assert hujan.status_code == 200
+    assert cerah.json()['source'] == 'heuristic'
+    assert hujan.json()['source'] == 'heuristic'
+    assert hujan.json()['demand_x'] < cerah.json()['demand_x']
+    assert 'hujan' in hujan.json()['narrative']
+    assert 'cerah' in cerah.json()['narrative']
+
+
 def test_forecast_membalas_200_dan_kontrak_field_lengkap():
     klien = TestClient(main.app)
     r = klien.post('/forecast', json={
