@@ -11,9 +11,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 import model_runtime
+from esg import narasi_esg
 from forecast import hitung_forecast_dengan_gemini
 from pricing import hitung_pricing
 from schemas import (
+    EsgRequest,
+    EsgResponse,
     ForecastRequest,
     ForecastResponse,
     HealthResponse,
@@ -94,3 +97,8 @@ def pricing(req: PricingRequest) -> PricingResponse:
 def forecast(req: ForecastRequest) -> ForecastResponse:
     rt = RUNTIME or model_runtime.Runtime(path=STATUS['model_path'])
     return ForecastResponse(**hitung_forecast_dengan_gemini(req, rt))
+
+
+@app.post('/esg-narrative', response_model=EsgResponse)
+def esg_narrative(req: EsgRequest) -> EsgResponse:
+    return EsgResponse(**narasi_esg(req))

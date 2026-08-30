@@ -77,8 +77,8 @@ class PricingResponse(BaseModel):
 
 
 class EsgRequest(BaseModel):
-    total_weight_kg: float
-    total_co2_kg: float
+    total_weight_kg: float = 0.0
+    total_co2_kg: float = 0.0
     total_revenue_recovered: float = 0.0
     meals_rescued: int = 0
     period_start: str | None = None
