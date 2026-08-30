@@ -1,6 +1,6 @@
 # Agent C — Serah Terima ML & API
 
-**Selesai** 31 Agustus 2026 · **11 commit** (`1b7e69c`..`d5fb156`) · **Python** 3.11.0
+**Selesai** 31 Agustus 2026 · **11 commit** (`1b7e69c^..d5fb156`) · **Python** 3.11.0
 di `ml/.venv` · **api/** 86 test lolos, **ml/** 14 test lolos (dijalankan ulang
 sendiri sebelum menulis dokumen ini, bukan disalin dari laporan tugas)
 
@@ -211,6 +211,16 @@ dipakai di seluruh proyek). `weather_code` 0..3 (0 cerah … 3 hujan). Sudah
 diverifikasi: berkas ini adalah prefiks persis dari `ml/data/train.csv`
 (3600 baris, sampai `2026-09-27`) — data yang sama, dipotong per tanggal.
 
+**Dua berkas, dua tujuan berbeda — jangan tertukar.** `train.csv` (120 hari,
+3600 baris) dipakai untuk melatih model dan **tidak pernah keluar dari
+`ml/`** — tidak di-commit, tidak masuk Supabase. `seed_sales_history.csv`
+(90 hari, 2700 baris, berkas yang dibahas di bagian ini) adalah yang
+di-`insert` ke `sales_history` lewat Agent A, dan karena itu **satu-satunya**
+yang muncul di layar mana pun — kartu forecast, badge ESG, apa pun yang
+Agent D query dari database. Seluruh statistik di bagian ini dihitung dari
+`seed_sales_history.csv`, bukan `train.csv` — keduanya berbeda tipis (sekitar
+0,3%) karena `train.csv` punya 30 hari tambahan yang tidak ikut ter-seed.
+
 **Insert aman**, `on conflict` bukan `delete`, supaya FK yang sudah ada
 (`sales_history` dirujuk `forecasts`) tidak putus:
 
@@ -231,25 +241,29 @@ on conflict (merchant_id, date) do update set
 sebagai penjaga sementara sebelum tugas ini jalan, lihat `A-HANDOFF.md` §3)
 memberi surplus rata-rata **1,422 kg/merchant/hari** — di bawah rentang
 riset Aksamala Foundation (2–3 kg). Berkas baru ini terkalibrasi lewat bagi
-dua (bukan diundi) sampai rata-rata masuk rentang, dan tercapai di **2,381
-kg/merchant/hari** (dicetak ulang dan diverifikasi sendiri saat menulis
-dokumen ini — lihat statistik lengkap di bagian 6.1).
+dua (bukan diundi) sampai rata-rata masuk rentang, dan tercapai di **2,371
+kg/merchant/hari** — dihitung langsung dari `seed_sales_history.csv` sendiri
+(`pandas.read_csv(...)['surplus_kg'].mean()`), bukan dari cetakan generator
+yang mencakup 120 hari penuh (yang mencetak 2,381 kg — lihat bagian 6.1).
+Keduanya masuk rentang 2–3 kg; angka 2,371 kg adalah yang benar-benar ada di
+Supabase.
 
 **Agent D akan melihat angka bergeser** setelah reseed ini masuk: rata porsi
-per hari naik dari basis lama ke **105,74 porsi/hari** (dulu sekitar 71 —
-lihat catatan di laporan Tugas 4), dan rata revenue **Rp 1.928.837/hari**.
+per hari naik dari basis lama ke **105,45 porsi/hari** (dulu sekitar 71 —
+lihat catatan di laporan Tugas 4), dan rata revenue **Rp 1.922.620/hari**.
 Ini perubahan yang disengaja, bukan regresi — kartu forecast dan badge ESG
 di layar merchant akan menampilkan angka yang lebih tinggi daripada saat
 gladi memakai seed lama.
 
-Sebaran per kategori merchant (rata porsi, rata surplus kg):
+Sebaran per kategori merchant (rata porsi, rata surplus kg), dihitung dari
+`seed_sales_history.csv`:
 
 | Kategori | Avg porsi | Avg surplus kg |
 |---|---|---|
-| bakery | 135,63 | 2,115 |
-| kafe | 97,64 | 2,551 |
-| katering | 143,25 | 2,377 |
-| warung | 67,99 | 2,449 |
+| bakery | 135,59 | 2,076 |
+| kafe | 97,17 | 2,571 |
+| katering | 142,69 | 2,397 |
+| warung | 67,81 | 2,422 |
 
 ---
 
@@ -265,7 +279,17 @@ Sebaran per kategori merchant (rata porsi, rata surplus kg):
   dipakai supaya `train_lstm.py` punya cukup baris untuk split kronologis
   80/20 yang berarti (2460 window latih, 720 validasi); hanya **90 hari
   pertama** (`seed_sales_history.csv`, berhenti di `2026-08-28`, sebelum
-  demo) yang benar-benar masuk ke database Supabase lewat Agent A.
+  demo) yang benar-benar masuk ke database Supabase lewat Agent A. Cetakan
+  statistik generator (`ml/generate_synthetic.py`, tanpa argumen, dicetak
+  ulang saat menulis dokumen ini) melaporkan seluruh 3600 baris/120 hari:
+  rata porsi/hari 105,74, rata revenue Rp 1.928.837, rata surplus global
+  **2,381 kg/merchant/hari** (per kategori: bakery 135,63/2,115 kg, kafe
+  97,64/2,551 kg, katering 143,25/2,377 kg, warung 67,99/2,449 kg). Ini
+  angka generator penuh, dipakai untuk membuktikan definisi-selesai di
+  bagian 7 — **bukan** angka yang ada di Supabase. Angka yang benar-benar
+  ter-seed (90 hari pertama saja) ada di bagian 5, dan sedikit lebih rendah
+  di semua baris karena 30 hari terakhir generator tidak ikut ter-potong ke
+  dalamnya.
 - **Kalibrasi `faktor_kepercayaan` lewat bagi dua** (`_cari_faktor`, binary
   search di rentang `0,90–1,30` yang dikunci), bukan diundi lalu diharap
   masuk rentang. Satu merchant (Roti Gembong Blimbing, bakery) tetap tidak
@@ -426,17 +450,22 @@ hanya karena versi library-nya sama — keduanya terbukti tidak cukup.
 ### 6.4 Yang tidak tercapai — dilaporkan apa adanya
 
 - **Roti Gembong Blimbing** (bakery, `id 3d958ebe-7815-418a-89fa-4fc5ae2be55f`)
-  mencapai hanya **1,796 kg/hari** surplus, di bawah rentang riset 2–3 kg,
+  mencapai hanya **1,716 kg/hari** surplus di `seed_sales_history.csv` — data
+  90 hari yang sungguh ada di Supabase dan yang akan dilihat siapa pun yang
+  query merchant ini (dihitung sendiri langsung dari berkas seed, bukan dari
+  cetakan generator 120 hari, yang memberi angka sedikit lebih tinggi,
+  1,796 kg — lihat bagian 6.1). Keduanya di bawah rentang riset 2–3 kg,
   bahkan di `faktor_kepercayaan` maksimum yang dikunci (1,30). Sebabnya:
   `base` (baseline porsi hariannya) terundi **80**, persis batas bawah
   rentang bakery `(80, 150)`, dan pada berat porsi bakery 0,08 kg, margin
-  produksi-vs-demand di faktor maksimum hanya cukup untuk 1,80 kg surplus.
-  Ini independen dari target yang diminta — melebarkan `FAKTOR_MAX` atau
-  rentang kategori bakery untuk mengejar satu merchant ditolak karena
+  produksi-vs-demand di faktor maksimum hanya cukup untuk sekitar 1,8 kg
+  surplus. Ini independen dari target yang diminta — melebarkan `FAKTOR_MAX`
+  atau rentang kategori bakery untuk mengejar satu merchant ditolak karena
   keduanya berasal dari spesifikasi (`04-ai-pipeline.md` §3), bukan dari
-  generator. **Rata-rata global tetap tercapai** (2,381 kg, dalam rentang
-  2–3 kg) — hanya satu dari 30 merchant yang meleset secara individual, dan
-  spesifikasi menuntut rata-rata, bukan setiap merchant.
+  generator. **Rata-rata global tetap tercapai** (2,371 kg di seed 90 hari,
+  2,381 kg di generator 120 hari — keduanya dalam rentang 2–3 kg) — hanya
+  satu dari 30 merchant yang meleset secara individual, dan spesifikasi
+  menuntut rata-rata, bukan setiap merchant.
 - **Image Docker 1,52 GB, di atas target 1,5 GB.** Target itu adalah angka
   yang ditulis rencana proyek ini sendiri, **bukan batas Railway yang
   sungguh terukur**. Pemilik proyek memutuskan menerimanya apa adanya dan
@@ -489,10 +518,10 @@ hanya karena versi library-nya sama — keduanya terbukti tidak cukup.
 
 | Butir | Status | Bukti |
 |---|---|---|
-| Generator: surplus rata-rata 2–3 kg/merchant/hari | **Tercapai** | 2,381 kg/merchant/hari (dicetak ulang sendiri saat menulis dokumen ini, lihat bagian 6.4 untuk satu merchant yang meleset individual) |
+| Generator: surplus rata-rata 2–3 kg/merchant/hari | **Tercapai** | 2,381 kg/merchant/hari dari cetakan generator penuh 120 hari (dicetak ulang sendiri saat menulis dokumen ini); 2,371 kg/merchant/hari kalau dihitung dari `seed_sales_history.csv` 90 hari yang sungguh ada di Supabase — lihat bagian 5 dan 6.1. Satu merchant meleset individual, lihat bagian 6.4 |
 | Model terlatih, MAE demand < 15% dari rata-rata | **Tercapai** | 7,73% (`demand_mae_pct`), `target_met: true`, satu kali percobaan |
 | `metrics.json` berisi angka akurasi nyata | **Tercapai** | lihat bagian 3, byte-identik di `ml/model/` dan `api/model/` |
-| Lima endpoint merespons < 2 detik saat hangat | **Tercapai** | `/health` ~4,8ms · `/triage` ~8,2ms · `/pricing` ~24,5ms · `/esg-narrative` ~7,6ms · `/forecast` hangat ~62ms (semua diukur reviewer di container hidup, diulang sendiri saat menulis dokumen ini: `/health` ~4,2ms, `/forecast` hangat ~58ms — konsisten) |
+| Lima endpoint merespons < 2 detik saat hangat | **Tercapai** | `/health` ~4,8ms · `/triage` ~8,2ms · `/pricing` ~24,5ms · `/esg-narrative` ~7,6ms · `/forecast` hangat ~62ms — angka Tugas 10, diukur reviewer di container yang baru dibangun bersih. Diukur ulang sendiri saat menulis dokumen ini di container yang sudah dipanaskan traffic lain: `/health` ~4,2ms dan `/forecast` hangat ~58ms konsisten dengan angka di atas; `/pricing` justru lebih cepat (~5–10ms, bukan 24,5ms) karena kondisi container berbeda, jadi angka Tugas 10 yang dipertahankan sebagai headline di sini karena diukur dalam kondisi terkontrol |
 | Gemini dimatikan → `/forecast` tetap 200 OK dengan `source='lstm_only'` | **Tercapai** | diuji lewat `TestClient` dan lewat `uvicorn` sungguhan tanpa `GEMINI_API_KEY` |
 | Model dihapus → `/health` `degraded`, `/forecast` tetap membalas | **Tercapai** | diuji dengan `.keras` dipindahkan sementara, dikembalikan byte-identik sesudahnya |
 | `test_parity.py` lulus di Python | **Tercapai** | 18/18, dijalankan ulang saat menulis dokumen ini |
@@ -510,7 +539,7 @@ menulis dokumen ini, bukan disalin dari laporan tugas manapun.
 ml/generate_synthetic.py     ml/train_lstm.py        ml/kalender.py
 ml/merchants.py               ml/test_generate.py     ml/test_train.py
 ml/requirements.txt           ml/data/seed_sales_history.csv  (train.csv tidak di-commit)
-ml/model/                     (tidak di-commit — .keras di-gitignore, salinannya di api/model/)
+ml/model/metrics.json, ml/model/scalers.json  (di-commit; hanya ml/model/*.keras yang di-gitignore — salinan .keras yang dipakai container ada di api/model/)
 
 api/main.py        api/schemas.py      api/constants.py    api/triage.py
 api/pricing.py      api/forecast.py     api/model_runtime.py api/heuristik.py
