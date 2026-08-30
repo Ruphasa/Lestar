@@ -37,13 +37,20 @@ def template(a) -> str:
 
 
 def _prompt(a, dasar: str) -> str:
+    # Angka yang dikirim ke Gemini harus sama persis dengan yang dicetak
+    # template — kalau tidak, paragraf Gemini dan fallback template bisa
+    # menyebut digit berbeda untuk figur yang sama (mis. noise floating
+    # point 32.149999999), dan itu melanggar aturan "satu angka, satu
+    # sumber kebenaran".
+    berat = _desimal(a.total_weight_kg)
+    co2 = _desimal(a.total_co2_kg)
     return (
         'Tulis satu paragraf Bahasa Indonesia untuk materi green branding sebuah '
         'usaha kuliner. Nada percaya diri tapi tidak berlebihan, 3-4 kalimat.\n\n'
         'Angka yang WAJIB dipakai apa adanya, jangan diubah dan jangan ditambah '
         'angka baru:\n'
-        f'- surplus pangan diselamatkan: {a.total_weight_kg} kg\n'
-        f'- emisi dihindari: {a.total_co2_kg} kg CO2eq\n'
+        f'- surplus pangan diselamatkan: {berat} kg\n'
+        f'- emisi dihindari: {co2} kg CO2eq\n'
         f'- porsi diselamatkan: {a.meals_rescued}\n'
         f'- nilai ekonomi dipulihkan: Rp {_rupiah(a.total_revenue_recovered)}\n'
         f"- periode: {a.period_start or '-'} sampai {a.period_end or '-'}\n"
@@ -60,14 +67,17 @@ def narasi_esg(a) -> dict:
 
     try:
         teks = gemini.minta_teks(_prompt(a, dasar), timeout=6.0)
+        if not teks:
+            return {'narrative': dasar, 'source': 'template'}
+
+        data = gemini.json_pertama(teks)
+        if not isinstance(data, dict):
+            return {'narrative': dasar, 'source': 'template'}
+
+        narasi = str(data.get('narasi') or '').strip()
     except Exception:      # noqa: BLE001
         return {'narrative': dasar, 'source': 'template'}
 
-    if not teks:
-        return {'narrative': dasar, 'source': 'template'}
-
-    data = gemini.json_pertama(teks)
-    narasi = str((data or {}).get('narasi') or '').strip()
     if not narasi:
         return {'narrative': dasar, 'source': 'template'}
     return {'narrative': narasi, 'source': 'gemini'}

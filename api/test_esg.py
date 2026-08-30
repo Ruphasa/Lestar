@@ -76,3 +76,100 @@ def test_template_memakai_format_rupiah_dan_desimal_indonesia():
     assert '32,1 kg' in teks
     assert 'Rp 2.450.000' in teks
     assert 'Rp 2,450,000' not in teks
+
+
+def _klien_tanpa_lempar_500():
+    """Klien yang melaporkan status asli, bukan yang melempar ulang exception
+    seperti default TestClient — supaya kegagalan Gemini yang tidak tertangkap
+    terlihat sebagai 500, bukan tersembunyi di traceback pytest."""
+    return TestClient(main.app, raise_server_exceptions=False)
+
+
+def test_gemini_balas_json_array_bukan_object_tidak_500(monkeypatch):
+    monkeypatch.setenv('GEMINI_API_KEY', 'kunci-uji')
+    monkeypatch.setattr(gemini, 'minta_teks', lambda *a, **k: '[1, 2, 3]')
+    r = _klien_tanpa_lempar_500().post('/esg-narrative', json=AGREGAT)
+    assert r.status_code == 200
+    assert r.json()['source'] == 'template'
+
+
+def test_gemini_balas_json_angka_polos_tidak_500(monkeypatch):
+    monkeypatch.setenv('GEMINI_API_KEY', 'kunci-uji')
+    monkeypatch.setattr(gemini, 'minta_teks', lambda *a, **k: '42')
+    r = _klien_tanpa_lempar_500().post('/esg-narrative', json=AGREGAT)
+    assert r.status_code == 200
+    assert r.json()['source'] == 'template'
+
+
+def test_gemini_balas_json_string_tidak_500(monkeypatch):
+    monkeypatch.setenv('GEMINI_API_KEY', 'kunci-uji')
+    monkeypatch.setattr(gemini, 'minta_teks', lambda *a, **k: '"halo"')
+    r = _klien_tanpa_lempar_500().post('/esg-narrative', json=AGREGAT)
+    assert r.status_code == 200
+    assert r.json()['source'] == 'template'
+
+
+def test_gemini_balas_json_true_tidak_500(monkeypatch):
+    monkeypatch.setenv('GEMINI_API_KEY', 'kunci-uji')
+    monkeypatch.setattr(gemini, 'minta_teks', lambda *a, **k: 'true')
+    r = _klien_tanpa_lempar_500().post('/esg-narrative', json=AGREGAT)
+    assert r.status_code == 200
+    assert r.json()['source'] == 'template'
+
+
+def test_gemini_minta_teks_melempar_exception_jatuh_ke_template(monkeypatch):
+    monkeypatch.setenv('GEMINI_API_KEY', 'kunci-uji')
+
+    def _meledak(*a, **k):
+        raise TimeoutError('koneksi macet')
+
+    monkeypatch.setattr(gemini, 'minta_teks', _meledak)
+    r = _klien_tanpa_lempar_500().post('/esg-narrative', json=AGREGAT)
+    assert r.status_code == 200
+    assert r.json()['source'] == 'template'
+
+
+def test_prompt_memakai_angka_yang_sudah_dibulatkan_bukan_float_mentah(monkeypatch):
+    """Prompt dan template harus menyebut digit yang sama. Kalau prompt
+    memakai float mentah (128.45, 32.149999999) sementara template sudah
+    membulatkan lewat _desimal, paragraf Gemini dan fallback template bisa
+    beda angka untuk permintaan yang sama."""
+    from schemas import EsgRequest
+
+    monkeypatch.setenv('GEMINI_API_KEY', 'kunci-uji')
+    ditangkap = {}
+
+    def _rekam(prompt, timeout=None):
+        ditangkap['prompt'] = prompt
+        return None  # jatuh ke template, kita hanya menguji isi prompt
+
+    monkeypatch.setattr(gemini, 'minta_teks', _rekam)
+    a = {**AGREGAT, 'total_weight_kg': 128.45, 'total_co2_kg': 32.149999999}
+    r = TestClient(main.app).post('/esg-narrative', json=a)
+    assert r.status_code == 200
+
+    prompt = ditangkap['prompt']
+    assert '128,5 kg' in prompt
+    assert '32,1 kg' in prompt
+    assert '128.45' not in prompt
+    assert '32.149999999' not in prompt
+
+
+def test_format_rupiah_jutaan_miliaran_dan_negatif():
+    assert esg._rupiah(1_000_000) == '1.000.000'
+    assert esg._rupiah(2_500_000_000) == '2.500.000.000'
+    assert esg._rupiah(-15000) == '-15.000'
+
+
+def test_format_desimal_negatif():
+    assert esg._desimal(-4.25) == '-4,3' or esg._desimal(-4.25) == '-4,2'
+    assert esg._desimal(-4.2) == '-4,2'
+
+
+def test_tipe_salah_tetap_422_setelah_default_ditambahkan():
+    """Default menghilangkan 422 untuk field yang HILANG, bukan untuk field
+    yang ADA tapi tipenya salah — validasi pydantic tetap berlaku."""
+    r = TestClient(main.app).post('/esg-narrative', json={
+        'total_weight_kg': 'bukan-angka',
+    })
+    assert r.status_code == 422
