@@ -13,5 +13,6 @@
   "target_mae_pct": 0.15,
   "target_met": true,
   "klaim_publik": 0.7,
-  "catatan": "demand_akurasi = 1 - MAE/rata-rata pada 20% window terakhir tiap merchant (split kronologis, bukan acak). klaim_publik sengaja ditahan di 0,70 sesuai docs/04-ai-pipeline.md \u00a73 \u2014 angka yang bisa dipertanggungjawabkan lebih meyakinkan daripada angka tinggi yang tidak bisa dibuktikan. Model dilatih pada data sintetis Fase 1."
+  "catatan": "demand_akurasi = 1 - MAE/rata-rata pada 20% window terakhir tiap merchant (split kronologis, bukan acak). klaim_publik sengaja ditahan di 0,70 sesuai docs/04-ai-pipeline.md §3 — angka yang bisa dipertanggungjawabkan lebih meyakinkan daripada angka tinggi yang tidak bisa dibuktikan. Model dilatih pada data sintetis Fase 1.",
+  "dasar_klaim": "92% diukur pada split kronologis data sintetis Fase 1. Untuk merchant sungguhan kami klaim 70% — dan jarak itulah alasan Fase 2 melakukan fine-tuning dengan data transaksi nyata."
 }

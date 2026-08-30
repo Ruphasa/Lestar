@@ -10,8 +10,12 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+import model_runtime
+from forecast import hitung_forecast
 from pricing import hitung_pricing
 from schemas import (
+    ForecastRequest,
+    ForecastResponse,
     HealthResponse,
     PricingRequest,
     PricingResponse,
@@ -24,16 +28,28 @@ VERSI = '1.0'
 
 # Status runtime, diisi sekali di lifespan dan hanya dibaca setelahnya.
 # /health membacanya tanpa I/O supaya balasannya di bawah 300 ms.
+# `model_path` sengaja TIDAK dibaca di sini (Tugas 3 membacanya saat impor,
+# yang membuat MODEL_PATH yang di-set sebelum startup tidak pernah kebaca
+# kalau modul ini sudah pernah diimpor). Nilai defaultnya diisi ulang oleh
+# lifespan setiap kali service (atau TestClient) start.
 STATUS: dict = {
     'model_loaded': False,
-    'model_path': os.getenv('MODEL_PATH', './model/lestar_lstm.keras'),
+    'model_path': './model/lestar_lstm.keras',
     'metrics': None,
 }
+
+RUNTIME: model_runtime.Runtime | None = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Tugas 6 memuat model di sini, sekali saat startup — bukan per request.
+    global RUNTIME
+    STATUS['model_path'] = os.getenv('MODEL_PATH', './model/lestar_lstm.keras')
+    RUNTIME = model_runtime.muat(STATUS['model_path'])
+    STATUS['model_loaded'] = RUNTIME.loaded
+    STATUS['metrics'] = RUNTIME.metrics
+    if not RUNTIME.loaded:
+        print(f'  model tidak dimuat ({RUNTIME.error}) — layanan jalan dalam mode degraded')
     yield
 
 
@@ -72,3 +88,9 @@ def pricing(req: PricingRequest) -> PricingResponse:
             req.original_price, req.hours_left, req.hours_total, req.qty_remaining, req.qty_total
         )
     )
+
+
+@app.post('/forecast', response_model=ForecastResponse)
+def forecast(req: ForecastRequest) -> ForecastResponse:
+    rt = RUNTIME or model_runtime.Runtime(path=STATUS['model_path'])
+    return ForecastResponse(**hitung_forecast(req, rt))

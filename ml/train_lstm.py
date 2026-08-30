@@ -218,6 +218,15 @@ def main() -> int:
         'target_mae_pct': 0.15,
         'target_met': bool(mae_pct < 0.15),
         'klaim_publik': 0.70,
+        # Ruling pemilik proyek soal `confidence`: 92% terukur di sini, tapi
+        # bukan yang diklaim ke merchant sungguhan. dasar_klaim jadi provenance
+        # angka itu — Agent D memakainya untuk melabeli badge akurasi supaya
+        # 92% tidak pernah tampil sebagai angka akurasi merchant nyata.
+        'dasar_klaim': (
+            '92% diukur pada split kronologis data sintetis Fase 1. Untuk '
+            'merchant sungguhan kami klaim 70% — dan jarak itulah alasan '
+            'Fase 2 melakukan fine-tuning dengan data transaksi nyata.'
+        ),
         'catatan': (
             'demand_akurasi = 1 - MAE/rata-rata pada 20% window terakhir tiap merchant '
             '(split kronologis, bukan acak). klaim_publik sengaja ditahan di 0,70 sesuai '
