@@ -20,6 +20,7 @@ __pycache__/
 .venv/
 venv/
 ml/data/*.csv
+!ml/data/seed_sales_history.csv
 ml/model/*.keras
 
 # Node
