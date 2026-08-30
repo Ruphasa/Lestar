@@ -1,6 +1,7 @@
 """Uji perakitan fitur, heuristik server, dan rute /forecast."""
 from datetime import date, timedelta
 
+import numpy as np
 import pytest
 from fastapi.testclient import TestClient
 
@@ -21,6 +22,25 @@ def _history(n=14, mulai=date(2026, 8, 15), porsi=70):
         }
         for i in range(n)
     ]
+
+
+@pytest.fixture
+def lifespan_asli():
+    """Simpan dan kembalikan `main.RUNTIME` / `main.STATUS`.
+
+    `with TestClient(main.app) as klien:` menjalankan `lifespan` sungguhan,
+    yang menulis `main.RUNTIME`/`main.STATUS` global -- dan lifespan tidak
+    membersihkannya lagi setelah `yield`. Tanpa fixture ini, tes yang
+    memakai `with` di sini akan membocorkan model yang benar-benar hidup ke
+    tes lain di berkas ini yang sengaja memalsukan `STATUS['model_loaded']`
+    ke False, membuat hasilnya tergantung urutan eksekusi.
+    """
+    runtime_asli = main.RUNTIME
+    status_asli = dict(main.STATUS)
+    yield
+    main.RUNTIME = runtime_asli
+    main.STATUS.clear()
+    main.STATUS.update(status_asli)
 
 
 def test_rekomendasi_produksi_memakai_ceil_dan_buffer():
@@ -111,3 +131,106 @@ def test_model_gagal_dimuat_membuat_health_degraded(monkeypatch):
     })
     assert r.status_code == 200
     assert r.json()['source'] == 'heuristic'
+
+
+# ─── Tes berikut memakai `with TestClient(...)` supaya `lifespan` benar-benar
+# jalan dan model asli termuat -- jalur lstm_only baru bisa diuji lewat sini.
+
+
+def _lewati_jika_model_tidak_termuat():
+    """Tes lapis LSTM butuh model asli untuk sungguh-sungguh menguji apa
+    pun -- kalau berkas model sedang sengaja disingkirkan (pembuktian mode
+    degraded), lewati alih-alih gagal. Jalur heuristik yang membuktikan
+    endpoint tetap 200 saat model tidak ada diuji di tes-tes lain di atas.
+    """
+    if main.RUNTIME is None or not main.RUNTIME.loaded:
+        pytest.skip('model tidak termuat di lingkungan ini -- lihat tes mode degraded')
+
+
+def test_health_ok_saat_lifespan_benar_benar_memuat_model(lifespan_asli):
+    with TestClient(main.app) as klien:
+        _lewati_jika_model_tidak_termuat()
+        h = klien.get('/health').json()
+        assert h['status'] == 'ok'
+        assert h['model_loaded'] is True
+
+
+def test_forecast_source_lstm_only_saat_model_nyala_dan_riwayat_penuh(lifespan_asli):
+    with TestClient(main.app) as klien:
+        _lewati_jika_model_tidak_termuat()
+        r = klien.post('/forecast', json={
+            'merchant_id': '4104d7ec-c72e-4113-a8f4-73e1d11423b1',
+            'history': _history(),
+            'target_date': '2026-08-29',
+            'weather_forecast': {'code': 0},
+            'merchant_context': {'name': 'Verde Kitchen', 'category': 'kafe'},
+        })
+        assert r.status_code == 200
+        body = r.json()
+        assert body['source'] == 'lstm_only'          # kesetaraan, bukan keanggotaan
+        assert isinstance(body['demand_x'], int)
+        assert 0.0 <= body['surplus_probability_y'] <= 1.0
+
+
+def test_forecast_lstm_only_urutan_history_tidak_masalah(lifespan_asli):
+    """Sama seperti test_forecast_menerima_history_terbaru_dulu, tapi di jalur
+    LSTM sungguhan, bukan cuma heuristik."""
+    with TestClient(main.app) as klien:
+        _lewati_jika_model_tidak_termuat()
+        naik = _history()
+        turun = list(reversed(naik))
+        body = {'merchant_id': 'x', 'target_date': '2026-08-29', 'weather_forecast': {'code': 0}}
+        a = klien.post('/forecast', json={**body, 'history': naik}).json()
+        b = klien.post('/forecast', json={**body, 'history': turun}).json()
+        assert a['source'] == 'lstm_only'
+        assert b['source'] == 'lstm_only'
+        assert a['demand_x'] == b['demand_x']
+
+
+def test_forecast_confidence_lstm_only_ikuti_rumus_faktor_situasi(lifespan_asli):
+    """docs/04-ai-pipeline.md §10: confidence = demand_akurasi x 0.90 untuk
+    lstm_only. Bukti utamanya: TIDAK dibatasi ke klaim_publik (0.70)."""
+    with TestClient(main.app) as klien:
+        _lewati_jika_model_tidak_termuat()
+        assert main.RUNTIME.metrics is not None
+        akurasi = float(main.RUNTIME.metrics['demand_akurasi'])
+        r = klien.post('/forecast', json={
+            'merchant_id': 'x', 'history': _history(), 'target_date': '2026-08-29',
+        })
+        body = r.json()
+        assert body['source'] == 'lstm_only'
+        harapan = akurasi * 0.90
+        assert abs(body['confidence'] - harapan) < 0.001
+        assert body['confidence'] > 0.70   # bukti tidak dibatasi ke klaim_publik
+
+
+def test_forecast_target_date_rusak_tetap_200_bukan_500():
+    """Regresi finding 1: tanggal yang tidak bisa di-parse tidak boleh 500.
+    Jalur heuristik cukup untuk regresi ini -- perbaikannya ada di `_tanggal`,
+    dipakai di kedua jalur."""
+    klien = TestClient(main.app)
+    r = klien.post('/forecast', json={
+        'merchant_id': 'x', 'history': _history(), 'target_date': 'bukan-tanggal',
+    })
+    assert r.status_code == 200
+    assert r.json()['demand_x'] >= 0
+
+
+def test_forecast_prediksi_nan_jatuh_ke_heuristik_bukan_500(monkeypatch, lifespan_asli):
+    """Regresi finding 2: NaN dari model.predict() harus jatuh ke heuristik,
+    bukan menjatuhkan endpoint dengan 500."""
+    with TestClient(main.app) as klien:
+        _lewati_jika_model_tidak_termuat()
+
+        def _predict_nan(X, verbose=0):
+            return (
+                np.array([[float('nan')]], dtype='float32'),
+                np.array([[0.5]], dtype='float32'),
+            )
+
+        monkeypatch.setattr(main.RUNTIME.model, 'predict', _predict_nan)
+        r = klien.post('/forecast', json={
+            'merchant_id': 'x', 'history': _history(), 'target_date': '2026-08-29',
+        })
+        assert r.status_code == 200
+        assert r.json()['source'] == 'heuristic'

@@ -14,6 +14,11 @@ import json
 from dataclasses import dataclass, field
 from pathlib import Path
 
+# Jaring pengaman kalau scalers.json tidak ada atau tidak punya entri
+# 'global'. Didefinisikan sekali di sini dan dipakai ulang oleh forecast.py
+# supaya kedua sisi tidak bisa diam-diam berselisih angka.
+SCALER_GLOBAL_DEFAULT: dict = {'porsi': 70.0, 'surplus': 2.5}
+
 
 @dataclass
 class Runtime:
@@ -37,7 +42,7 @@ def muat(path: str) -> Runtime:
     berkas = Path(path)
     folder = berkas.parent
 
-    rt.scalers = _baca_json(folder / 'scalers.json') or {'per_merchant': {}, 'global': {'porsi': 70.0, 'surplus': 2.5}}
+    rt.scalers = _baca_json(folder / 'scalers.json') or {'per_merchant': {}, 'global': SCALER_GLOBAL_DEFAULT}
     rt.metrics = _baca_json(folder / 'metrics.json')
 
     if not berkas.exists():

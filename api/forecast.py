@@ -6,15 +6,26 @@ Setiap lapis menulis `source` dengan jujur.
 
 from __future__ import annotations
 
+import math
 from datetime import date, datetime
 
 import numpy as np
 
 from constants import BERAT_PORSI_DEFAULT_KG, normalisasi_weather, round_half_away
 from heuristik import NAMA_HARI, forecast_heuristik, rekomendasi_produksi
+from model_runtime import SCALER_GLOBAL_DEFAULT
 
 WINDOW = 14
 FITUR = 11
+
+# confidence = demand_akurasi x faktor_situasi (docs/04-ai-pipeline.md §10).
+# lstm_gemini baru bisa dicapai di Tugas 7 -- masuk di sini sekarang supaya
+# Tugas 7 tidak perlu menyentuh rumus ini lagi. `heuristic` tidak lewat sini
+# sama sekali; confidence-nya tetap 0.45 milik Agent B (lihat heuristik.py).
+FAKTOR_SITUASI: dict[str, float] = {
+    'lstm_gemini': 1.00,
+    'lstm_only': 0.90,
+}
 
 
 def _bulat_n(x: float, n: int) -> float:
@@ -35,7 +46,18 @@ def urutkan_history(rows: list[dict]) -> list[dict]:
 
 
 def _tanggal(s: str) -> date:
-    return datetime.strptime(s[:10], '%Y-%m-%d').date()
+    """Parse 'YYYY-MM-DD...'. Tanggal yang rusak tidak boleh menjatuhkan
+    permintaan jadi 500 -- balas dengan tanggal hari ini, jawaban yang cukup
+    masuk akal untuk sebuah ramalan yang tanggalnya sendiri tidak terbaca.
+
+    Dipakai untuk `target_date` di request maupun `date` di tiap baris
+    history (lewat `_dow`) -- keduanya sama-sama data yang datang dari luar
+    dan sama-sama tidak boleh membuat endpoint gagal.
+    """
+    try:
+        return datetime.strptime(str(s)[:10], '%Y-%m-%d').date()
+    except (ValueError, TypeError, IndexError):
+        return date.today()
 
 
 def _dow(row: dict) -> int:
@@ -59,7 +81,7 @@ def rakit_window(history: list[dict], scalers: dict) -> tuple[np.ndarray, float]
     porsi = [float(r['portions_sold']) for r in rows]
     surplus = [float(r.get('surplus_kg') or 0.0) for r in rows]
 
-    g = scalers.get('global', {'porsi': 70.0, 'surplus': 2.5})
+    g = scalers.get('global', SCALER_GLOBAL_DEFAULT)
     sp = max(sum(porsi) / len(porsi), 1.0) if max(porsi) > 0 else float(g['porsi'])
     ss = max(sum(surplus) / len(surplus), 0.01) if max(surplus) > 0 else float(g['surplus'])
 
@@ -73,18 +95,30 @@ def rakit_window(history: list[dict], scalers: dict) -> tuple[np.ndarray, float]
     return X, sp
 
 
-def _confidence(metrics: dict | None) -> float:
-    """Diturunkan dari metrik nyata, bukan angka enak.
+def _confidence(metrics: dict | None, source: str, n_hari: int = WINDOW) -> float:
+    """confidence = demand_akurasi x faktor_situasi (docs/04-ai-pipeline.md §10).
 
-    Badge akurasi di UI merchant memakai angka yang sama, jadi badge itu
-    mencerminkan hasil validasi model — bukan nilai karangan.
+    Keputusan pemilik proyek 30 Agustus 2026 menggantikan aturan lama
+    ("clamp ke [0.30, 0.95]"): 0,70 adalah proyeksi proposal, bukan hasil
+    ukur, dan menahan angka terukur turun ke situ menghapus satu-satunya
+    sinyal yang membedakan `lstm_gemini` dari `lstm_only` di UI. **Jangan
+    dibatasi ke `klaim_publik`.**
+
+    `faktor_situasi` tergantung lapisan mana yang menghasilkan angka ini
+    (1.00 untuk lstm_gemini dengan riwayat 14 hari penuh, 0.90 untuk
+    lstm_only), dikalikan lagi dengan `n_hari / WINDOW` kalau riwayat yang
+    dipakai kurang dari 14 hari. Jalur `heuristic` tidak pernah lewat sini;
+    confidence-nya tetap 0.45 milik Agent B, tidak disentuh di sini.
     """
     if not metrics:
         return 0.60
     akurasi = metrics.get('demand_akurasi')
     if akurasi is None:
         return 0.60
-    return _bulat_n(min(max(float(akurasi), 0.30), 0.95), 3)
+    faktor = FAKTOR_SITUASI.get(source, 0.90)
+    if n_hari < WINDOW:
+        faktor *= n_hari / WINDOW
+    return _bulat_n(float(akurasi) * faktor, 3)
 
 
 def narasi_template(demand_x: int, target_date: date, weather_code: int,
@@ -117,21 +151,28 @@ def hitung_forecast(req, runtime) -> dict:
         pred_demand, pred_surplus = runtime.model.predict(X, verbose=0)
         demand = float(pred_demand.reshape(-1)[0]) * sp
         surplus_y = float(pred_surplus.reshape(-1)[0])
+
+        # Prediksi NaN/inf bukan angka yang bisa dipakai -- perlakukan sebagai
+        # model gagal dan jatuh ke heuristik, bukan 500. Semua aritmetika di
+        # bawah baris ini ada di dalam try yang sama supaya kalau ada yang
+        # meledak, jalurnya tetap turun ke heuristik, bukan naik jadi 500.
+        if not (math.isfinite(demand) and math.isfinite(surplus_y)):
+            raise ValueError(f'prediksi model tidak valid: demand={demand!r} surplus={surplus_y!r}')
+
+        demand = max(demand, 0.0)
+        surplus_y = min(max(surplus_y, 0.0), 1.0)
+        demand_x = round_half_away(demand)
+        produksi = rekomendasi_produksi(demand, surplus_y)
+        nama = req.merchant_context.name if req.merchant_context else None
+
+        return {
+            'demand_x': demand_x,
+            'surplus_probability_y': _bulat_n(surplus_y, 4),
+            'surplus_volume_est_kg': _bulat_n(demand * surplus_y * BERAT_PORSI_DEFAULT_KG, 3),
+            'recommended_production': produksi,
+            'confidence': _confidence(runtime.metrics, 'lstm_only', WINDOW),
+            'narrative': narasi_template(demand_x, target, kode_cuaca, surplus_y, produksi, nama),
+            'source': 'lstm_only',
+        }
     except Exception:                    # noqa: BLE001 — model bermasalah bukan alasan 500
         return forecast_heuristik(urutkan_history(history), target, kode_cuaca)
-
-    demand = max(demand, 0.0)
-    surplus_y = min(max(surplus_y, 0.0), 1.0)
-    demand_x = round_half_away(demand)
-    produksi = rekomendasi_produksi(demand, surplus_y)
-    nama = req.merchant_context.name if req.merchant_context else None
-
-    return {
-        'demand_x': demand_x,
-        'surplus_probability_y': _bulat_n(surplus_y, 4),
-        'surplus_volume_est_kg': _bulat_n(demand * surplus_y * BERAT_PORSI_DEFAULT_KG, 3),
-        'recommended_production': produksi,
-        'confidence': _confidence(runtime.metrics),
-        'narrative': narasi_template(demand_x, target, kode_cuaca, surplus_y, produksi, nama),
-        'source': 'lstm_only',
-    }
