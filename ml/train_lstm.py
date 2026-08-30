@@ -241,7 +241,14 @@ def main() -> int:
     # merender suatu karakter.
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
     API_MODEL_DIR.mkdir(parents=True, exist_ok=True)
-    model.save(MODEL_DIR / 'lestar_lstm.keras')
+    # save_format='h5' eksplisit -- BUKAN dihilangkan begitu saja. Tanpa
+    # ini, model.save() menulis format v3 '.keras' (zip) yang membangun
+    # path grup HDF5 lewat os.path.join(); di Windows itu membekukan
+    # separator backslash (mis. 'layers\dense') ke dalam nama grup, dan
+    # artefaknya gagal dimuat di Linux (lihat Tugas 10 -- /health jadi
+    # degraded). Format H5 legacy selalu memakai '/' literal, jadi
+    # portabel lintas OS.
+    model.save(MODEL_DIR / 'lestar_lstm.keras', save_format='h5')
     (MODEL_DIR / 'scalers.json').write_text(json.dumps(scalers, indent=2), encoding='utf-8')
     (MODEL_DIR / 'metrics.json').write_text(json.dumps(metrics, indent=2), encoding='utf-8')
 
