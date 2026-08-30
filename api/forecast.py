@@ -11,6 +11,7 @@ from datetime import date, datetime
 
 import numpy as np
 
+import gemini
 from constants import BERAT_PORSI_DEFAULT_KG, normalisasi_weather, round_half_away
 from heuristik import NAMA_HARI, forecast_heuristik, rekomendasi_produksi
 from model_runtime import SCALER_GLOBAL_DEFAULT
@@ -170,9 +171,53 @@ def hitung_forecast(req, runtime) -> dict:
             'surplus_probability_y': _bulat_n(surplus_y, 4),
             'surplus_volume_est_kg': _bulat_n(demand * surplus_y * BERAT_PORSI_DEFAULT_KG, 3),
             'recommended_production': produksi,
-            'confidence': _confidence(runtime.metrics, 'lstm_only', WINDOW),
+            'confidence': _confidence(runtime.metrics, 'lstm_only', len(history)),
             'narrative': narasi_template(demand_x, target, kode_cuaca, surplus_y, produksi, nama),
             'source': 'lstm_only',
         }
     except Exception:                    # noqa: BLE001 — model bermasalah bukan alasan 500
         return forecast_heuristik(urutkan_history(history), target, kode_cuaca)
+
+
+def hitung_forecast_dengan_gemini(req, runtime) -> dict:
+    """Lapis 1 di atas Lapis 2. Heuristik tidak pernah dikirim ke Gemini —
+    LLM tidak boleh mengarang angka di atas angka yang bukan dari model.
+    """
+    hasil = hitung_forecast(req, runtime)
+    if hasil['source'] != 'lstm_only':
+        return hasil
+
+    target = _tanggal(req.target_date)
+    kode_cuaca = req.weather_forecast.code if req.weather_forecast else 0
+    ctx = req.merchant_context
+    konteks = {
+        'target_date': req.target_date,
+        'nama_hari': NAMA_HARI[target.weekday()],
+        'cuaca': 'hujan' if normalisasi_weather(kode_cuaca) >= 0.7 else 'cerah',
+        'is_holiday': any(h.is_holiday for h in req.history[-1:]),
+        'nama': ctx.name if ctx else None,
+        'kategori': ctx.category if ctx else None,
+        'surplus_y': hasil['surplus_probability_y'],
+        'narasi_template': hasil['narrative'],
+    }
+
+    demand, narasi, source = gemini.kalibrasi(float(hasil['demand_x']), konteks)
+    if source != 'lstm_gemini':
+        return hasil
+
+    surplus_y = hasil['surplus_probability_y']
+    return {
+        **hasil,
+        'demand_x': round_half_away(demand),
+        'surplus_volume_est_kg': _bulat_n(demand * surplus_y * BERAT_PORSI_DEFAULT_KG, 3),
+        'recommended_production': rekomendasi_produksi(demand, surplus_y),
+        # Faktor situasi lstm_gemini (x1.00), bukan lstm_only (x0.90) --
+        # kalau tidak, badge confidence lstm_gemini dan lstm_only sama saja
+        # di UI, padahal itulah satu-satunya sinyal yang membedakan keduanya
+        # (docs/04-ai-pipeline.md §10). n_hari dikirim apa adanya (bukan
+        # WINDOW yang di-hardcode) supaya skala riwayat < 14 hari ikut jalan
+        # kalau suatu saat jalurnya bisa dicapai dengan riwayat sependek itu.
+        'confidence': _confidence(runtime.metrics, 'lstm_gemini', len(req.history)),
+        'narrative': narasi,
+        'source': 'lstm_gemini',
+    }

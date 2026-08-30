@@ -5,6 +5,8 @@ import numpy as np
 import pytest
 from fastapi.testclient import TestClient
 
+import forecast
+import gemini
 import main
 from forecast import rekomendasi_produksi
 from heuristik import forecast_heuristik
@@ -202,6 +204,61 @@ def test_forecast_confidence_lstm_only_ikuti_rumus_faktor_situasi(lifespan_asli)
         harapan = akurasi * 0.90
         assert abs(body['confidence'] - harapan) < 0.001
         assert body['confidence'] > 0.70   # bukti tidak dibatasi ke klaim_publik
+
+
+def test_confidence_faktor_situasi_lstm_gemini_lebih_tinggi_dari_lstm_only():
+    """docs/04-ai-pipeline.md §10: faktor 1.00 untuk lstm_gemini, 0.90 untuk
+    lstm_only -- Tugas 6 menghitungnya benar tapi tidak pernah dipanggil
+    dengan source='lstm_gemini'. Regresi Tugas 7: buktikan langsung lewat
+    `_confidence`, sumber kebenarannya, terlepas dari apakah endpoint
+    sungguhan sedang bisa mencapai jalur itu."""
+    metrics = {'demand_akurasi': 0.9227}
+    gemini_ = forecast._confidence(metrics, 'lstm_gemini', 14)
+    only = forecast._confidence(metrics, 'lstm_only', 14)
+    assert gemini_ > only
+    assert abs(gemini_ - 0.9227) < 0.001         # x1.00
+    assert abs(only - 0.9227 * 0.90) < 0.001     # x0.90
+
+
+def test_confidence_riwayat_kurang_dari_14_hari_diskalakan():
+    """docs/04-ai-pipeline.md §10: riwayat < 14 hari dikali (n_hari / 14)."""
+    metrics = {'demand_akurasi': 0.9227}
+    penuh = forecast._confidence(metrics, 'lstm_only', 14)
+    tujuh_hari = forecast._confidence(metrics, 'lstm_only', 7)
+    assert tujuh_hari < penuh
+    assert abs(tujuh_hari - 0.9227 * 0.90 * (7 / 14)) < 0.001
+
+    # >= 14 hari tidak boleh mengalikan faktor di atas 1.00 (bukan "n_hari/14
+    # selalu dikalikan", hanya kalau riwayatnya KURANG dari 14 hari).
+    lebih_dari_14 = forecast._confidence(metrics, 'lstm_only', 30)
+    assert abs(lebih_dari_14 - penuh) < 0.001
+
+
+def test_forecast_lstm_gemini_confidence_lebih_tinggi_dari_lstm_only(monkeypatch, lifespan_asli):
+    """Bukti ujung-ke-ujung: request yang sama, satu lolos kalibrasi Gemini
+    dan satu jatuh ke lstm_only, harus membawa confidence yang berbeda --
+    itulah satu-satunya sinyal yang membedakan keduanya di UI."""
+    with TestClient(main.app) as klien:
+        _lewati_jika_model_tidak_termuat()
+        monkeypatch.delenv('GEMINI_API_KEY', raising=False)
+        body = {
+            'merchant_id': 'x', 'history': _history(), 'target_date': '2026-08-29',
+            'weather_forecast': {'code': 0},
+        }
+        r_only = klien.post('/forecast', json=body)
+        assert r_only.json()['source'] == 'lstm_only'
+        conf_only = r_only.json()['confidence']
+        demand_only = r_only.json()['demand_x']
+
+        monkeypatch.setenv('GEMINI_API_KEY', 'kunci-uji')
+        geseran = int(demand_only * 1.05) or 1
+        monkeypatch.setattr(
+            gemini, 'minta_teks',
+            lambda *a, **k: f'{{"demand": {geseran}, "narasi": "Kalibrasi uji."}}',
+        )
+        r_gemini = klien.post('/forecast', json=body)
+        assert r_gemini.json()['source'] == 'lstm_gemini'
+        assert r_gemini.json()['confidence'] > conf_only
 
 
 def test_forecast_target_date_rusak_tetap_200_bukan_500():

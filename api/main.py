@@ -11,7 +11,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 import model_runtime
-from forecast import hitung_forecast
+from forecast import hitung_forecast_dengan_gemini
 from pricing import hitung_pricing
 from schemas import (
     ForecastRequest,
@@ -93,4 +93,4 @@ def pricing(req: PricingRequest) -> PricingResponse:
 @app.post('/forecast', response_model=ForecastResponse)
 def forecast(req: ForecastRequest) -> ForecastResponse:
     rt = RUNTIME or model_runtime.Runtime(path=STATUS['model_path'])
-    return ForecastResponse(**hitung_forecast(req, rt))
+    return ForecastResponse(**hitung_forecast_dengan_gemini(req, rt))
