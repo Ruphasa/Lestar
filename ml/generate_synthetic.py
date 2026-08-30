@@ -15,6 +15,7 @@ Jalankan:  ml/.venv/Scripts/python.exe ml/generate_synthetic.py
 from __future__ import annotations
 
 import argparse
+import sys
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -228,6 +229,18 @@ def cetak_ringkasan(r: dict) -> None:
 
 
 def main() -> int:
+    # Cetakan statistik pakai karakter garis kotak (box-drawing). Beberapa
+    # konsol Windows memakai codepage lama (cp1252) yang tidak bisa
+    # menampilkannya dan akan melempar UnicodeEncodeError kalau tidak
+    # diamankan. reconfigure() dibungkus try/except karena tidak semua objek
+    # stream punya metode ini (stdout yang di-redirect atau dibungkus bisa
+    # tidak punya) -- kegagalan mempercantik keluaran tidak boleh pernah
+    # menggagalkan proses.
+    try:
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    except Exception:
+        pass
+
     p = argparse.ArgumentParser(description='Generator data sintetis Lestar')
     p.add_argument('--out', default=str(AKAR / 'data'), help='folder keluaran')
     args = p.parse_args()
@@ -237,8 +250,9 @@ def main() -> int:
 
     df = generate()
     r = ringkasan(df)
-    cetak_ringkasan(r)
 
+    # Berkas CSV ditulis SEBELUM ringkasan dicetak. Keluaran data tidak boleh
+    # pernah bergantung pada apakah konsol sanggup merender suatu karakter.
     train = df.copy()
     train['date'] = train['date'].dt.strftime('%Y-%m-%d')
     train.to_csv(out / 'train.csv', index=False)
@@ -247,6 +261,8 @@ def main() -> int:
     seed = df[df['date'] <= batas].copy()
     seed['date'] = seed['date'].dt.strftime('%Y-%m-%d')
     seed.to_csv(out / 'seed_sales_history.csv', index=False)
+
+    cetak_ringkasan(r)
 
     print(f"  train.csv                {len(train)} baris  "
           f"{train['date'].min()} .. {train['date'].max()}")
