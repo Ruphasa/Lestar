@@ -306,3 +306,51 @@ Kunci ini **hanya** ada di environment Railway. Tidak pernah masuk ke APK.
 - [ ] Rumus triage dan pricing di Python identik dengan versi Dart — diuji dengan 10 input yang sama
 - [ ] Image Docker < 1,5 GB
 - [ ] `/health` merespons < 300 ms
+
+---
+
+## 10. Akurasi vs confidence — dua besaran, jangan disatukan
+
+**Keputusan 30 Agustus 2026**, setelah Agent C mengukur `demand_akurasi = 0,9227` pada split kronologis data sintetis.
+
+### Masalahnya bukan memilih angka, tapi memilih label
+
+`0,70` di proposal (Tabel 2.5.1) **bukan hasil pengukuran** — itu proyeksi. Menahan 0,9227 turun ke 0,70 tidak membuat sistem lebih jujur; itu mengganti angka terukur dengan angka yang tidak mengukur apa pun, lalu kehilangan dasarnya.
+
+Yang benar: **cantumkan dasar pengukurannya**, jangan tahan angkanya.
+
+### Badge akurasi merchant
+
+```
+92% · data sintetis
+```
+
+Terukur, berlabel, pertahanannya ada di layar sebelum juri bertanya. Slot label ini tetap benar setelah produksi — `92% · data sintetis` menjadi `88% · 90 hari data Anda`.
+
+Sumber: `ml/model/metrics.json` → `demand_akurasi`. **Jangan hardcode.**
+
+### `confidence` per ramalan
+
+Besaran berbeda. Badge mengukur mutu model; `confidence` mengukur seberapa dipercaya **ramalan ini**, dan berubah tiap permintaan.
+
+```
+confidence = demand_akurasi × faktor_situasi
+
+lstm_gemini, riwayat 14 hari penuh   0.92 × 1.00 = 0.92
+lstm_only                            0.92 × 0.90 = 0.83
+riwayat < 14 hari                    dikali (n_hari / 14)
+heuristic (fallback_engine.dart)     0.45   ← milik Agent B, jangan diubah
+```
+
+**Jangan dibatasi 0,70.** Menahannya di angka proposal membuat lapisan `lstm_gemini` dan `lstm_only` terlihat sama padahal tidak — dan `confidence` adalah satu-satunya sinyal yang membedakan keduanya di UI.
+
+### Di mana 0,70 tetap dipakai
+
+Sebagai **klaim ke depan untuk merchant sungguhan**, bukan metrik model. Tempatnya:
+- deck slide 7
+- jawaban lisan saat juri menekan soal akurasi
+- `metrics.json` → `klaim_publik` (sudah ada, biarkan)
+
+Kalimat yang disiapkan:
+
+> *"92% diukur pada split kronologis data sintetis Fase 1. Untuk merchant sungguhan kami klaim 70% — dan jarak itulah alasan Fase 2 melakukan fine-tuning dengan data transaksi nyata."*

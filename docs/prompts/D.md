@@ -176,3 +176,9 @@ Tulis ringkasan di `docs/06-agent-briefs/D-HANDOFF.md`: layar yang selesai, yang
 **4. Pakai pembantu format yang sudah ada** di `lib/core/utils/formatters.dart`, jangan menulis sendiri. Rupiah, tanggal, jarak, dan berat semua sudah ada.
 
 **5. Shell dan `NavigationBar` bukan milikmu.** Ada di `lib/core/routing/shells.dart`. Isi tab bebas kamu ubah; bentuk shell jangan.
+
+**6. Badge akurasi: `92% · data sintetis`, bukan `92%` polos dan bukan `70%`.**
+
+Angka dari `ml/model/metrics.json` → `demand_akurasi`, **jangan hardcode**. Label dasarnya wajib ikut — itu yang membuat angkanya bisa dipertahankan saat juri bertanya. Alasan lengkap di `04-ai-pipeline.md` §10.
+
+`confidence` yang datang dari `/forecast` adalah besaran **berbeda** dari badge: badge = mutu model, `confidence` = seberapa dipercaya ramalan hari itu. Kalau kamu menampilkannya, tampilkan terpisah — jangan disatukan dengan badge.

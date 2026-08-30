@@ -1,0 +1,17 @@
+{
+  "trained_at": "2026-08-30T01:15:15+00:00",
+  "n_merchant": 30,
+  "n_hari": 120,
+  "n_window_latih": 2460,
+  "n_window_validasi": 720,
+  "epoch_berjalan": 19,
+  "demand_mae_porsi": 8.2,
+  "demand_mae_pct": 0.0773,
+  "demand_akurasi": 0.9227,
+  "rata_porsi_validasi": 106.13,
+  "surplus_akurasi": 0.8583,
+  "target_mae_pct": 0.15,
+  "target_met": true,
+  "klaim_publik": 0.7,
+  "catatan": "demand_akurasi = 1 - MAE/rata-rata pada 20% window terakhir tiap merchant (split kronologis, bukan acak). klaim_publik sengaja ditahan di 0,70 sesuai docs/04-ai-pipeline.md \u00a73 \u2014 angka yang bisa dipertanggungjawabkan lebih meyakinkan daripada angka tinggi yang tidak bisa dibuktikan. Model dilatih pada data sintetis Fase 1."
+}
