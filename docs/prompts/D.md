@@ -182,3 +182,21 @@ Tulis ringkasan di `docs/06-agent-briefs/D-HANDOFF.md`: layar yang selesai, yang
 Angka dari `ml/model/metrics.json` → `demand_akurasi`, **jangan hardcode**. Label dasarnya wajib ikut — itu yang membuat angkanya bisa dipertahankan saat juri bertanya. Alasan lengkap di `04-ai-pipeline.md` §10.
 
 `confidence` yang datang dari `/forecast` adalah besaran **berbeda** dari badge: badge = mutu model, `confidence` = seberapa dipercaya ramalan hari itu. Kalau kamu menampilkannya, tampilkan terpisah — jangan disatukan dengan badge.
+
+**7. Dari mana angka badge akurasi diambil — sudah diputuskan, jangan menimbang lagi.**
+
+`metrics.json` ada di `api/model/` dan `ml/model/`, keduanya tidak bisa dibaca APK saat runtime. Jangan mengirimkannya sebagai aset Flutter dan jangan menunggu `/forecast` mengembalikannya — endpoint itu tidak mengirim mutu model.
+
+Tambahkan **satu konstanta** ke `lib/core/constants.dart`:
+
+```dart
+/// Sumber: api/model/metrics.json → demand_akurasi (Agent C, 30 Agu 2026).
+/// Diukur pada split kronologis data sintetis Fase 1, bukan acak.
+/// Perbarui manual kalau model dilatih ulang.
+static const double modelAkurasi = 0.9227;
+static const String modelDasarUji = 'data sintetis';
+```
+
+Badge merender `'${(modelAkurasi * 100).round()}% · $modelDasarUji'` → **`92% · data sintetis`**.
+
+Ini satu-satunya kali kamu boleh menyentuh berkas milik Agent B. Satu blok, di bagian bawah kelas, dan catat di `D-HANDOFF.md`. E dan F tidak akan menyentuh baris itu, jadi tidak ada risiko bentrok.
