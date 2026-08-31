@@ -25,7 +25,24 @@ import httpx
 MODEL = 'gemini-2.5-flash'
 URL = f'https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent'
 BATAS_GESERAN = 0.20
-TIMEOUT = 3.0
+
+# TIMEOUT sempat 3,0 detik dan membuat /forecast SELALU jatuh ke lstm_only:
+# gemini-2.5-flash menyalakan "thinking" secara default dan butuh ~9 detik untuk
+# prompt ini. Diukur 31 Agu 2026 — 5,8 s sampai 9,0 s, tidak pernah di bawah 3 s.
+#
+# thinkingConfig.thinkingBudget=0 mematikan penalaran bertahap dan memangkasnya
+# jadi ~1,3 detik. Kalibrasi tetap hidup: konteks hari libur nasional tetap
+# menggeser 98 menjadi 110 (+12,2%), masih di dalam pita BATAS_GESERAN. Tugas
+# di sini memang bukan penalaran panjang — hanya menggeser satu angka dalam
+# batas sempit dan menuliskan satu kalimat.
+#
+# TIMEOUT 6,0 detik memberi ruang lebih dari empat kali latensi terukur, dan
+# tetap muat di dalam timeout klien Flutter yang 4 detik untuk jalur cache-miss
+# berikutnya. Nilai ini sama dengan yang sudah dipakai esg.py.
+TIMEOUT = 6.0
+
+# Dipakai di minta_teks(); menguntungkan /forecast maupun /esg-narrative.
+THINKING_OFF = {'thinkingBudget': 0}
 
 
 def tersedia() -> bool:
@@ -43,7 +60,11 @@ def minta_teks(prompt: str, timeout: float = TIMEOUT) -> str | None:
             params={'key': kunci},
             json={
                 'contents': [{'parts': [{'text': prompt}]}],
-                'generationConfig': {'temperature': 0.4, 'responseMimeType': 'application/json'},
+                'generationConfig': {
+                    'temperature': 0.4,
+                    'responseMimeType': 'application/json',
+                    'thinkingConfig': THINKING_OFF,
+                },
             },
             timeout=timeout,
         )

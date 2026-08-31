@@ -354,3 +354,62 @@ Sebagai **klaim ke depan untuk merchant sungguhan**, bukan metrik model. Tempatn
 Kalimat yang disiapkan:
 
 > *"92% diukur pada split kronologis data sintetis Fase 1. Untuk merchant sungguhan kami klaim 70% — dan jarak itulah alasan Fase 2 melakukan fine-tuning dengan data transaksi nyata."*
+
+---
+
+## 11. Jebakan latensi Gemini — `thinkingBudget: 0`
+
+**Ditemukan 31 Agustus 2026 saat verifikasi API yang sudah terdeploy.**
+
+`/forecast` selalu mengembalikan `lstm_only` di produksi, empat kali berturut-turut, padahal `/health` melaporkan `gemini_configured: true` dan `/esg-narrative` mengembalikan `source: gemini`.
+
+### Penyebab
+
+`gemini-2.5-flash` menyalakan *thinking* secara default. Untuk prompt forecast, latensi terukur **5,8 – 9,0 detik**. `gemini.py` memakai `TIMEOUT = 3.0`, jadi setiap panggilan kena timeout, ditelan `except Exception`, dan turun ke `lstm_only`. `/esg-narrative` lolos karena memakai 6,0 detik dan promptnya lebih ringan.
+
+Ini bukan salah Agent C — dokumen inilah yang menetapkan timeout klien 4 detik sekaligus meminta lapisan pengayaan Gemini. Kedua syarat itu tidak bisa benar bersamaan pada model yang berpikir.
+
+### Perbaikan
+
+```python
+'generationConfig': {
+    'temperature': 0.4,
+    'responseMimeType': 'application/json',
+    'thinkingConfig': {'thinkingBudget': 0},   # 9,0 s → 1,3 s
+}
+TIMEOUT = 6.0
+```
+
+| | Latensi | `source` |
+|---|---|---|
+| Sebelum | 5,8 – 9,0 s | selalu `lstm_only` |
+| Sesudah | **1,3 – 1,6 s** | **`lstm_gemini`** |
+
+### Kalibrasi tidak hilang
+
+Kekhawatiran wajar: tanpa penalaran, apakah Gemini cuma menggemakan angka LSTM? Diuji:
+
+| Konteks | Keluaran | Geseran |
+|---|---|---|
+| Senin biasa, cerah | 98 | 0% — benar, tidak ada yang tidak biasa |
+| **Hari libur nasional** | **110** | **+12,2%**, di dalam pita ±20% |
+
+Tugas Gemini di sini memang bukan penalaran panjang — menggeser satu angka dalam batas sempit dan menulis satu kalimat. Thinking tidak menambah nilai untuk itu, hanya menambah 7,7 detik.
+
+### Kenapa bukan Groq
+
+Groq memang lebih cepat, dan seam-nya sudah rapi (`gemini.kalibrasi` terisolasi). Tapi menggantinya berarti kunci baru, klien baru, penyetelan prompt ulang, test ulang, plus memperbarui klaim di proposal dan deck — untuk memecahkan masalah yang `thinkingBudget: 0` sudah selesaikan dalam satu baris.
+
+Simpan sebagai opsi setelah demo, bukan sekarang.
+
+### Kenapa tidak perlu loading state atau streaming
+
+1,3 detik muat di dalam timeout klien 4 detik, jadi tidak perlu render bertahap. Streaming juga tidak membantu: yang ditunggu adalah **angka** di dalam JSON, bukan prosa panjang — menstreaming token tidak membuat angka datang lebih awal.
+
+### Cache tetap berguna, tapi tidak lagi menopang
+
+`forecasts` unik per `(merchant_id, forecast_date)`, jadi satu ramalan per merchant per hari. Sekarang perannya kenyamanan, bukan penyelamat latensi.
+
+### Catatan uji
+
+Empat test di `test_forecast.py` mengandaikan `GEMINI_API_KEY` **tidak ada** di lingkungan. Menjalankan `pytest` dengan `api/.env` termuat membuat keempatnya gagal padahal kodenya benar. Jalankan test tanpa kunci, atau perbaiki test agar memalsukan `gemini.tersedia()`.
