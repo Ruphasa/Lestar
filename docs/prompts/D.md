@@ -200,3 +200,24 @@ static const String modelDasarUji = 'data sintetis';
 Badge merender `'${(modelAkurasi * 100).round()}% · $modelDasarUji'` → **`92% · data sintetis`**.
 
 Ini satu-satunya kali kamu boleh menyentuh berkas milik Agent B. Satu blok, di bagian bawah kelas, dan catat di `D-HANDOFF.md`. E dan F tidak akan menyentuh baris itu, jadi tidak ada risiko bentrok.
+
+**8. Cache-first itu wajib, bukan optimasi — dan ini menyelamatkan demo.**
+
+Kuota free tier Gemini bisa habis (sudah pernah, 31 Agu 2026). Kalau habis saat demo, `/forecast` mengembalikan `lstm_only` dan `/esg-narrative` memakai template.
+
+Arsitekturnya sudah menyelesaikan ini: **kedua keluaran Gemini disimpan.**
+
+| Tabel | Kolom | Dipakai menit |
+|---|---|---|
+| `forecasts` | `narrative`, `source` | 0:00 |
+| `esg_reports` | `narrative` | 6:00 |
+
+Dua hal yang **wajib** kamu lakukan:
+
+1. **Baca cache dulu, selalu.** `forecastRepository.getForecast(merchantId, besok)` sebelum menyentuh jaringan. Kalau ada baris, tampilkan apa adanya — termasuk `source`-nya. Jangan pernah memanggil `/forecast` hanya untuk "menyegarkan".
+
+2. **Simpan laporan ESG ke `esg_reports`**, jangan hanya render ke layar. Kalau tidak disimpan, setiap pembukaan tab ESG memanggil Gemini lagi dan menghabiskan kuota.
+
+Efeknya: Gemini cuma perlu hidup **sekali** sebelum Rabu. Baris yang tersimpan memang lahir dari Gemini, jadi badge `AI · LSTM + Gemini` di menit 0:00 sepenuhnya jujur.
+
+Jangan menambah tombol "refresh forecast" di build demo.

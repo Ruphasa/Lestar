@@ -227,3 +227,31 @@ Sekaligus membuktikan tiga hal dalam satu gerakan: sistem tangguh, arsitekturnya
 ## 9. Gladi bersih
 
 **Minimal tiga kali berturut-turut tanpa kesalahan, Selasa malam.** Pakai stopwatch. Kalau lewat 7 menit, potong bagian ESG jadi lebih singkat — jangan potong kaskade atau penutup offline.
+
+---
+
+## 10. Pemanasan cache Gemini — wajib, H-1
+
+**Ditambahkan 1 September 2026** setelah kuota free tier Gemini habis saat pengujian.
+
+Demo membutuhkan Gemini hidup **sekali saja**, bukan saat tampil. Kedua keluarannya persisten: `forecasts.narrative` + `forecasts.source`, dan `esg_reports.narrative`.
+
+Selama kuota tersedia, lakukan dua hal ini dan **jangan diulang**:
+
+| # | Tindakan | Mengisi | Dipakai menit |
+|---|---|---|---|
+| 1 | Buka Merchant Home sebagai Verde Kitchen | satu baris `forecasts` untuk tanggal demo | 0:00 |
+| 2 | Buka tab ESG, biarkan laporan tergenerate | satu baris `esg_reports` | 6:00 |
+
+Lalu verifikasi bahwa yang tersimpan memang dari Gemini:
+```sql
+select forecast_date, source, left(narrative, 60) from forecasts
+where merchant_id = '<verde>' order by created_at desc limit 1;
+-- source harus 'lstm_gemini'
+```
+
+Kalau `source` masih `lstm_only`, kuota belum pulih — ulangi setelah reset (tengah malam waktu Pasifik, sekitar 14.00 WIB).
+
+**Setelah kedua baris terisi, jangan panggil `/forecast` atau `/esg-narrative` lagi** sampai demo selesai. Termasuk saat gladi bersih — gladi membaca cache, dan itu memang perilaku yang akan terjadi di depan juri.
+
+`reset_demo.sql` **tidak boleh** menghapus kedua baris ini. Periksa sebelum memakainya.
