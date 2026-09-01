@@ -79,24 +79,31 @@ class DiscountPill extends StatelessWidget {
   final bool compact;
 
   @override
-  Widget build(BuildContext context) => Container(
-    padding: EdgeInsets.symmetric(
-      horizontal: compact ? 8 : 10,
-      vertical: compact ? 3 : 5,
-    ),
-    decoration: BoxDecoration(
-      color: LestarTokens.orange,
-      borderRadius: BorderRadius.circular(LestarTokens.radiusChip),
-    ),
-    child: Text(
-      Fmt.diskon(percent),
-      style: LestarType.display(
-        size: compact ? 12 : 14,
-        wght: 700,
-        color: LestarTokens.ink,
+  Widget build(BuildContext context) {
+    final normalized = percent.clamp(0.0, 0.7) / 0.7;
+    final scale = compact
+        ? 0.82 + (normalized * 0.12)
+        : 0.9 + (normalized * 0.24);
+    final horizontal = (compact ? 8.0 : 10.0) * scale;
+    final vertical = (compact ? 3.0 : 5.0) * scale;
+    final fontSize = (compact ? 12.0 : 14.0) * scale;
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: horizontal, vertical: vertical),
+      decoration: BoxDecoration(
+        color: LestarTokens.orange,
+        borderRadius: BorderRadius.circular(LestarTokens.radiusChip),
       ),
-    ),
-  );
+      child: Text(
+        Fmt.diskon(percent),
+        style: LestarType.display(
+          size: fontSize,
+          wght: 700,
+          color: LestarTokens.ink,
+        ),
+      ),
+    );
+  }
 }
 
 /// Harga jual, dengan harga asli dicoret kalau ada.
@@ -116,20 +123,26 @@ class PriceText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
     final tampilkanAsli = originalPrice != null && originalPrice! > price;
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.baseline,
-      textBaseline: TextBaseline.alphabetic,
+    return Wrap(
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 6,
+      runSpacing: 2,
       children: [
         Text(
           Fmt.rupiah(price),
-          style: LestarType.display(size: size, wght: 700, color: cs.onSurface),
+          style: LestarType.display(
+            size: size,
+            wght: 700,
+            color: theme.brightness == Brightness.light
+                ? LestarTokens.orangeText
+                : LestarTokens.orange,
+          ),
         ),
-        if (tampilkanAsli) ...[
-          const SizedBox(width: 6),
+        if (tampilkanAsli)
           Text(
             Fmt.rupiah(originalPrice!),
             style: LestarType.body(
@@ -137,7 +150,6 @@ class PriceText extends StatelessWidget {
               color: cs.onSurface.withValues(alpha: 0.5),
             ).copyWith(decoration: TextDecoration.lineThrough),
           ),
-        ],
       ],
     );
   }

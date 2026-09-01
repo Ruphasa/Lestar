@@ -9,6 +9,9 @@ supabase/.env
 
 # Flutter
 .dart_tool/
+.flutter-sdk/
+.flutter-sdk-test/
+.pub-cache/
 build/
 .flutter-plugins*
 *.apk
