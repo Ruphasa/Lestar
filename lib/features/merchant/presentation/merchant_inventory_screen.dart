@@ -305,6 +305,7 @@ class _MerchantInventoryScreenState
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 initialValue: _category,
+                isExpanded: true,
                 decoration: const InputDecoration(
                   labelText: 'Kategori',
                   prefixIcon: Icon(Icons.category_outlined),
@@ -313,7 +314,11 @@ class _MerchantInventoryScreenState
                   for (final category in LestarConstants.kategoriListing)
                     DropdownMenuItem(
                       value: category,
-                      child: Text(Fmt.kategori(category)),
+                      child: Text(
+                        Fmt.kategori(category),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                 ],
                 onChanged: _busy || _submission != null

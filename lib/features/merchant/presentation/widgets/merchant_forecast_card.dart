@@ -61,16 +61,27 @@ class MerchantForecastCard extends StatelessWidget {
                   duration: reducedMotion
                       ? Duration.zero
                       : const Duration(milliseconds: 600),
-                  child: Text(
-                    '${forecast.demandX.round()} kg',
+                  child: FittedBox(
                     key: ValueKey(
                       '${forecast.source.wire}-${forecast.demandX}',
                     ),
-                    style: LestarType.angkaBesar(color: Colors.white),
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      '${forecast.demandX.round()} kg',
+                      maxLines: 1,
+                      style: LestarType.angkaBesar(color: Colors.white),
+                    ),
                   ),
                 ),
               ),
-              _WarnChip(difference: difference),
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
+                  child: _WarnChip(difference: difference),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 18),
@@ -118,7 +129,11 @@ class MerchantForecastCard extends StatelessWidget {
           const SizedBox(height: 14),
           Align(
             alignment: Alignment.centerRight,
-            child: SourceBadge(source: forecast.source, compact: true),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerRight,
+              child: SourceBadge(source: forecast.source, compact: true),
+            ),
           ),
         ],
       ),

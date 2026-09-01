@@ -215,12 +215,16 @@ class PartnerAvailableView extends StatelessWidget {
                     color: LestarTokens.emerald,
                   ),
                   const SizedBox(width: 8),
-                  Text(
-                    'DESA SUKAMAJU',
-                    style: LestarType.display(
-                      size: 20,
-                      wght: 700,
-                      color: LestarTokens.ink,
+                  Flexible(
+                    child: Text(
+                      'DESA SUKAMAJU',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: LestarType.display(
+                        size: 20,
+                        wght: 700,
+                        color: LestarTokens.ink,
+                      ),
                     ),
                   ),
                 ],
@@ -245,11 +249,14 @@ class PartnerAvailableView extends StatelessWidget {
           textAlign: TextAlign.center,
           style: LestarType.judulPengepul(color: LestarTokens.ink),
         ),
-        Text(
-          _weight(totalKg),
-          textAlign: TextAlign.center,
-          maxLines: 1,
-          style: LestarType.angkaRaksasa(color: LestarTokens.emeraldDeep),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            _weight(totalKg),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            style: LestarType.angkaRaksasa(color: LestarTokens.emeraldDeep),
+          ),
         ),
         const SizedBox(height: 14),
         Text(
@@ -313,10 +320,14 @@ class PartnerJourneyView extends StatelessWidget {
         style: LestarType.body(size: 20, wght: 600, color: LestarTokens.muted),
       ),
       const SizedBox(height: 38),
-      Text(
-        Fmt.jarak(destination.jarakKm).toUpperCase(),
-        textAlign: TextAlign.center,
-        style: LestarType.angkaRaksasa(color: LestarTokens.emeraldDeep),
+      FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Text(
+          Fmt.jarak(destination.jarakKm).toUpperCase(),
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          style: LestarType.angkaRaksasa(color: LestarTokens.emeraldDeep),
+        ),
       ),
       const SizedBox(height: 36),
       PartnerOutlineButton(
@@ -437,17 +448,22 @@ class PartnerWasteMapView extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
+                      width: 92,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
                         vertical: 4,
                       ),
                       color: Colors.white,
-                      child: Text(
-                        _weight(row.weightKg),
-                        style: LestarType.display(
-                          size: 16,
-                          wght: 800,
-                          color: LestarTokens.ink,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          _weight(row.weightKg),
+                          maxLines: 1,
+                          style: LestarType.display(
+                            size: 16,
+                            wght: 800,
+                            color: LestarTokens.ink,
+                          ),
                         ),
                       ),
                     ),
