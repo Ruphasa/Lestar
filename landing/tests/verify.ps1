@@ -5,9 +5,10 @@ $repoRoot = Split-Path -Parent $landingRoot
 $required = @(
   'assets/logo-full.png', 'assets/logo-glyph.svg',
   'assets/value-route.svg', 'assets/cascade.svg', 'assets/cascade-mobile.svg',
+  'index.html',
   'assets/screenshots/consumer.png', 'assets/screenshots/merchant.png',
   'assets/screenshots/partner.png',
-  'index.html', 'styles.css', 'app.js', 'vercel.json',
+  'styles.css', 'app.js', 'vercel.json',
   'assets/fonts/PlusJakartaSans-wght.ttf', 'assets/fonts/Inter-opsz-wght.ttf',
   'public/lestar.apk'
 )
@@ -59,6 +60,21 @@ foreach ($marker in $orderedMarkers) {
 }
 if (($html | Select-String -Pattern '<h1[ >]' -AllMatches).Matches.Count -ne 1) {
   throw 'Halaman harus memiliki tepat satu h1'
+}
+$aktorSection = [regex]::Match(
+  $html,
+  '<section\b[^>]*\bid\s*=\s*["'']aktor["''][^>]*>(?<content>.*?)</section>',
+  [System.Text.RegularExpressions.RegexOptions]::IgnoreCase -bor
+    [System.Text.RegularExpressions.RegexOptions]::Singleline
+)
+if (-not $aktorSection.Success) { throw 'Section #aktor tidak ditemukan' }
+$aktorArticleCount = [regex]::Matches(
+  $aktorSection.Groups['content'].Value,
+  '<article\b',
+  [System.Text.RegularExpressions.RegexOptions]::IgnoreCase
+).Count
+if ($aktorArticleCount -ne 3) {
+  throw "Section #aktor harus memiliki tepat tiga article; ditemukan: $aktorArticleCount"
 }
 if ($html -notmatch 'href="#konten-utama"') { throw 'Skip link tidak ditemukan' }
 if ($html -notmatch 'href="/public/lestar\.apk"[^>]*download') { throw 'Tautan APK tidak valid' }
