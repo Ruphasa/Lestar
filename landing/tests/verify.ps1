@@ -3,17 +3,29 @@ $landingRoot = Split-Path -Parent $PSScriptRoot
 $repoRoot = Split-Path -Parent $landingRoot
 
 $required = @(
-  'index.html', 'styles.css', 'app.js', 'vercel.json',
   'assets/logo-full.png', 'assets/logo-glyph.svg',
   'assets/value-route.svg', 'assets/cascade.svg', 'assets/cascade-mobile.svg',
-  'assets/fonts/PlusJakartaSans-wght.ttf', 'assets/fonts/Inter-opsz-wght.ttf',
   'assets/screenshots/consumer.png', 'assets/screenshots/merchant.png',
-  'assets/screenshots/partner.png', 'public/lestar.apk'
+  'assets/screenshots/partner.png',
+  'index.html', 'styles.css', 'app.js', 'vercel.json',
+  'assets/fonts/PlusJakartaSans-wght.ttf', 'assets/fonts/Inter-opsz-wght.ttf',
+  'public/lestar.apk'
 )
 foreach ($relative in $required) {
   $path = Join-Path $landingRoot $relative
   if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
     throw "Berkas wajib tidak ditemukan: $relative"
+  }
+}
+
+foreach ($svgName in @('logo-glyph.svg','value-route.svg','cascade.svg','cascade-mobile.svg')) {
+  $svgPath = Join-Path $landingRoot "assets/$svgName"
+  $svg = Get-Content -Raw -Encoding UTF8 -LiteralPath $svgPath
+  if ($svg -notmatch '<svg' -or $svg -match '<text') {
+    throw "SVG $svgName harus berupa path tanpa text bergantung font"
+  }
+  if ($svg -match '#12C56A|stroke-dasharray') {
+    throw "SVG $svgName memakai warna atau divider terlarang"
   }
 }
 
