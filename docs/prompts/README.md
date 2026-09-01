@@ -21,6 +21,11 @@ Selasa  G   (bebas, bisa kapan saja)
 | 5 | [E.md](E.md) | B selesai | 5–7 jam | UI konsumen |
 | 6 | [F.md](F.md) | B selesai | 3–4 jam | UI pengepul. Paling cepat, paling berkesan |
 | 7 | [G.md](G.md) | kapan saja | 3–4 jam | Butuh tangkapan layar dari D/E/F untuk deck |
+| 8 | [H.md](H.md) | D dan F selesai | 1–2 jam | **Paralel dengan E**, terminal terpisah — audit luberan tata letak di lebar HP |
+
+**H dan E aman berjalan bersamaan:** E di `lib/features/consumer/`, H di `merchant/` dan `partner/`. Nol berkas bersinggungan. H dilarang menyentuh `consumer/`, dan dilarang mengubah `core/` atau `shared/` — hanya melaporkannya.
+
+**Yang tidak bisa didelegasikan ke agent mana pun:** verifikasi di HP sungguhan — keterbacaan dari 1,5 meter, kecepatan blur di HP entry-level, kamera pindai QR, GPS. Itu tetap pekerjaan manusia, ~15 menit.
 
 **B dan C bisa jalan bersamaan** di dua sesi terpisah — keduanya tidak saling menyentuh berkas.
 **D, E, F bisa jalan bersamaan** setelah B selesai — masing-masing punya folder sendiri.
