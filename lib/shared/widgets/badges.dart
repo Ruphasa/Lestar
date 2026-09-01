@@ -18,27 +18,32 @@ class SourceBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (String teks, IconData ikon, Color latar, Color warnaTeks) =
-        switch (source) {
-          ForecastSource.lstmGemini => (
-            'Prediksi AI',
-            Icons.auto_awesome,
-            LestarTokens.emeraldTint,
-            LestarTokens.forest,
-          ),
-          ForecastSource.lstmOnly => (
-            'Model tanpa narasi',
-            Icons.insights,
-            LestarTokens.emeraldTint,
-            LestarTokens.forest,
-          ),
-          ForecastSource.heuristic => (
-            'Perkiraan lokal',
-            Icons.offline_bolt_outlined,
-            LestarTokens.surfaceGrey,
-            LestarTokens.muted,
-          ),
-        };
+    final gelap = Theme.of(context).brightness == Brightness.dark;
+    final (
+      String teks,
+      IconData ikon,
+      Color latar,
+      Color warnaTeks,
+    ) = switch (source) {
+      ForecastSource.lstmGemini => (
+        gelap ? 'AI · LSTM + Gemini' : 'Prediksi AI',
+        Icons.auto_awesome,
+        gelap ? const Color(0xFF113525) : LestarTokens.emeraldTint,
+        gelap ? LestarTokens.emerald : LestarTokens.forest,
+      ),
+      ForecastSource.lstmOnly => (
+        gelap ? 'AI · LSTM' : 'Model tanpa narasi',
+        Icons.insights,
+        gelap ? Colors.white.withValues(alpha: 0.05) : LestarTokens.emeraldTint,
+        gelap ? LestarTokens.emeraldDeep : LestarTokens.forest,
+      ),
+      ForecastSource.heuristic => (
+        gelap ? 'Mode offline · heuristik' : 'Perkiraan lokal',
+        Icons.offline_bolt_outlined,
+        gelap ? Colors.white.withValues(alpha: 0.05) : LestarTokens.surfaceGrey,
+        gelap ? Colors.white.withValues(alpha: 0.55) : LestarTokens.muted,
+      ),
+    };
 
     return Container(
       padding: EdgeInsets.symmetric(
@@ -112,8 +117,7 @@ class PriceText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final tampilkanAsli =
-        originalPrice != null && originalPrice! > price;
+    final tampilkanAsli = originalPrice != null && originalPrice! > price;
 
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -122,11 +126,7 @@ class PriceText extends StatelessWidget {
       children: [
         Text(
           Fmt.rupiah(price),
-          style: LestarType.display(
-            size: size,
-            wght: 700,
-            color: cs.onSurface,
-          ),
+          style: LestarType.display(size: size, wght: 700, color: cs.onSurface),
         ),
         if (tampilkanAsli) ...[
           const SizedBox(width: 6),

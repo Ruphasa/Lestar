@@ -72,15 +72,15 @@ class DarkGlassCard extends StatelessWidget {
     return ClipRRect(
       borderRadius: radius,
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
         child: Material(
-          color: LestarTokens.inkSoft.withValues(alpha: 0.78),
+          color: const Color(0xFF151A13).withValues(alpha: 0.88),
           child: InkWell(
             onTap: onTap,
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: radius,
-                border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
               ),
               padding: padding,
               child: child,

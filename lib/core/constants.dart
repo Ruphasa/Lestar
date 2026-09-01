@@ -111,4 +111,11 @@ class LestarConstants {
   static const Duration timeoutTriage = Duration(seconds: 4);
   static const Duration timeoutPricing = Duration(seconds: 3);
   static const Duration timeoutEsg = Duration(seconds: 8);
+
+  // ── Mutu model ────────────────────────────────────────────────────────
+  /// Sumber: api/model/metrics.json → demand_akurasi (Agent C, 30 Agu 2026).
+  /// Diukur pada split kronologis data sintetis Fase 1, bukan acak.
+  /// Perbarui manual kalau model dilatih ulang.
+  static const double modelAkurasi = 0.9227;
+  static const String modelDasarUji = 'data sintetis';
 }
