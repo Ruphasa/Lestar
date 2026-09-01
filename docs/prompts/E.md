@@ -184,3 +184,19 @@ Tulis ringkasan di `docs/06-agent-briefs/E-HANDOFF.md`: layar yang selesai, yang
 **5. Pakai `lib/core/utils/formatters.dart`** untuk rupiah, jarak, dan waktu — jangan menulis sendiri.
 
 **6. Shell dan `NavigationBar` bukan milikmu.** Ada di `lib/core/routing/shells.dart`.
+
+**7. Dua jebakan test yang sudah menggigit Agent D — jangan ulangi.**
+
+**Locale.** `Fmt.tanggal`, `Fmt.jam`, dan `Fmt.rupiah` memakai `DateFormat`/`NumberFormat` locale `id_ID`. `main.dart` memanggil `initializeDateFormatting('id_ID')` sebelum `runApp`, tapi widget test merender langsung tanpa melewati `main()`. Tambahkan di test:
+```dart
+setUpAll(() async => initializeDateFormatting('id_ID'));
+```
+
+**Lebar layar.** Surface test bawaan **800×600 lebih lebar dari HP mana pun**. Layar ESG Agent D lolos di 800 px dan meluber **128 px** di 400 px — lebar HP sungguhan. Setel lebar HP di setiap widget test:
+```dart
+tester.view.physicalSize = const Size(390, 900);
+tester.view.devicePixelRatio = 1;
+addTearDown(tester.view.resetPhysicalSize);
+addTearDown(tester.view.resetDevicePixelRatio);
+```
+Radar-mu penuh kartu melayang di atas peta dan pill diskon — justru paling rawan meluber di lebar sempit.

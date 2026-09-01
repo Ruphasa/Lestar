@@ -22,6 +22,10 @@ void main() {
   // E dan F akan bertemu hal yang sama begitu menyentuh Fmt.tanggal atau jam.
   setUpAll(() async => initializeDateFormatting('id_ID'));
 
+  // Setiap test menyetel lebar HP sendiri lewat `tester.view.physicalSize`.
+  // Itu disengaja: surface bawaan 800x600 lebih lebar dari HP mana pun, dan
+  // overflow di laporan ESG hanya muncul di bawah ~400 dp.
+
   testWidgets('forecast card memuat akurasi, sumber, dan tujuh hari', (
     tester,
   ) async {

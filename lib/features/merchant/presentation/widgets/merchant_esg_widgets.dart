@@ -122,9 +122,13 @@ class MerchantEsgReportView extends StatelessWidget {
                     color: LestarTokens.emerald,
                   ),
                   const SizedBox(width: 9),
-                  Text(
-                    'Narasi green branding',
-                    style: LestarType.judulKartu(color: Colors.white),
+                  // Expanded wajib: tanpa ini Row meluber 128 px di lebar HP
+                  // 400 dp. Tidak terlihat di surface test 800 px bawaan.
+                  Expanded(
+                    child: Text(
+                      'Narasi green branding',
+                      style: LestarType.judulKartu(color: Colors.white),
+                    ),
                   ),
                 ],
               ),

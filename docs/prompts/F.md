@@ -209,3 +209,19 @@ Tulis ringkasan di `docs/06-agent-briefs/F-HANDOFF.md`: layar yang selesai, yang
 **5. Shell dan `NavigationBar` bukan milikmu.** Ada di `lib/core/routing/shells.dart`. Bentuknya jangan diubah, isinya bebas.
 
 **6. Keputusanmu tidak memakai `BackdropFilter` sudah tepat** — Agent B mencatat blur adalah hal yang paling mungkin lambat di HP entry-level seperti milik Pak Budi.
+
+**7. Dua jebakan test yang sudah menggigit Agent D — jangan ulangi.**
+
+**Locale.** `Fmt.*` memakai locale `id_ID`. `main.dart` menginisialisasinya sebelum `runApp`, tapi widget test tidak melewati `main()`. Tambahkan:
+```dart
+setUpAll(() async => initializeDateFormatting('id_ID'));
+```
+
+**Lebar layar.** Surface test bawaan **800×600 lebih lebar dari HP mana pun**. Layar ESG Agent D lolos di 800 px dan meluber **128 px** di 400 px. Setel lebar HP di setiap widget test:
+```dart
+tester.view.physicalSize = const Size(390, 900);
+tester.view.devicePixelRatio = 1;
+addTearDown(tester.view.resetPhysicalSize);
+addTearDown(tester.view.resetDevicePixelRatio);
+```
+Ini **sangat penting untukmu**: angka `25 KG` 90 sp dan tombol 140 dp adalah elemen terbesar di seluruh aplikasi. Kalau ada yang meluber, itu di layarmu.
