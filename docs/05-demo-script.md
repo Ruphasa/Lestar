@@ -165,7 +165,13 @@ Halo, Pak Budi
 
 > **Berhenti. Jelaskan.** *"Perhatikan perbedaannya. Konsumen dapat antarmuka kaca yang ringan. Merchant dapat kokpit data gelap. Pak Budi dapat ini. Pak Budi berusia lima puluh dua tahun, HP-nya entry-level, dan dia membaca layar ini di bawah matahari sambil membawa ember. Glassmorphism di tangannya bukan keindahan — itu penghalang. Kami tidak memaksakan satu design system ke tiga orang yang hidup di dunia berbeda."*
 
-Tekan **JEMPUT SEKARANG** → status `matched`. Merchant menerima notifikasi realtime.
+Tekan **JEMPUT SEKARANG** → status `matched`. Layar berubah jadi mode perjalanan.
+
+> **Klaim "merchant menerima notifikasi realtime" dihapus dari naskah ini.** Agent F menemukan policy insert `notifications` hanya menerima `user_id = auth.uid()`, jadi pengepul tidak bisa menulis notifikasi untuk merchant, dan tabel itu belum masuk publication realtime.
+>
+> Tidak diperbaiki karena **tidak pernah terlihat di jalur demo** — layar tidak pernah kembali ke merchant di menit ini, dan realtime sudah dibuktikan di menit 2:30 lewat radar konsumen. Jangan mengucapkannya kalau tidak ditunjukkan.
+>
+> Perbaikannya kalau ada waktu setelah demo: trigger `SECURITY DEFINER` pada transisi `waste_batches.available → matched` yang menulis ke `source_merchant_id`, lalu masukkan `notifications` ke publication realtime. Jangan melonggarkan policy insert klien.
 
 ### 6:00 — 6:45 · Merchant · Laporan ESG
 Ganti ke merchant → tab **ESG**.
