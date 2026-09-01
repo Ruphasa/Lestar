@@ -48,10 +48,16 @@ if ($css -notmatch 'prefers-reduced-motion' -or $css -notmatch ':focus-visible')
 
 $sourceApk = Join-Path $repoRoot 'build/app/outputs/flutter-apk/app-release.apk'
 $publicApk = Join-Path $landingRoot 'public/lestar.apk'
-if (-not (Test-Path -LiteralPath $sourceApk -PathType Leaf)) {
+function Test-ValidApkSource {
+  param([string]$Path)
+  if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { return $false }
+  return (Get-Item -LiteralPath $Path).Length -gt 0
+}
+
+if (-not (Test-ValidApkSource $sourceApk)) {
   $configuredSource = $env:LESTAR_RELEASE_APK_SOURCE
   if ([string]::IsNullOrWhiteSpace($configuredSource) -or
-      -not (Test-Path -LiteralPath $configuredSource -PathType Leaf)) {
+      -not (Test-ValidApkSource $configuredSource)) {
     throw 'APK release sumber tidak ditemukan; set LESTAR_RELEASE_APK_SOURCE ke file APK yang ada'
   }
   $sourceApk = $configuredSource
