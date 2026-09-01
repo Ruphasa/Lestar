@@ -11,6 +11,11 @@ void main() {
   testWidgets('langganan hanya menampilkan satu tindakan perpanjang', (
     tester,
   ) async {
+    tester.view.physicalSize = const Size(390, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     final partner = Partner(
       id: 'p1',
       orgName: 'Maggot Berkah Malang',
@@ -37,5 +42,6 @@ void main() {
     expect(find.text('LANGGANAN AKTIF'), findsOneWidget);
     expect(find.text('PERPANJANG 30 HARI'), findsOneWidget);
     expect(find.byType(FilledButton), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }
