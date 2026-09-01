@@ -18,7 +18,7 @@ class PlainTheme {
   static final ThemeData data = ThemeData(
     useMaterial3: true,
     brightness: Brightness.light,
-    scaffoldBackgroundColor: LestarTokens.surfaceGrey,
+    scaffoldBackgroundColor: Colors.white,
     colorScheme: const ColorScheme.light(
       primary: LestarTokens.emeraldDeep,
       onPrimary: Colors.white,
@@ -40,17 +40,36 @@ class PlainTheme {
       color: Colors.white,
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(LestarTokens.radiusKartu),
+        borderRadius: BorderRadius.circular(8),
+        side: const BorderSide(color: LestarTokens.ink, width: 2),
       ),
+    ),
+    appBarTheme: AppBarTheme(
+      backgroundColor: Colors.white,
+      foregroundColor: LestarTokens.ink,
+      elevation: 0,
+      centerTitle: false,
+      titleTextStyle: LestarType.display(
+        size: 24,
+        wght: 700,
+        color: LestarTokens.ink,
+      ),
+    ),
+    dividerTheme: const DividerThemeData(color: LestarTokens.ink, thickness: 2),
+    progressIndicatorTheme: const ProgressIndicatorThemeData(
+      color: LestarTokens.emeraldDeep,
     ),
     // Indikator nav dipaksa hijau. Material 3 memakai `secondaryContainer`
     // untuk indikator, dan `secondaryContainer` kita bernuansa oranye —
     // padahal oranye disediakan khusus untuk uang dan peringatan. Tanpa
     // baris ini, tab aktif tampil oranye dan hierarki warnanya rusak.
-    navigationBarTheme: const NavigationBarThemeData(
+    navigationBarTheme: NavigationBarThemeData(
       indicatorColor: LestarTokens.emeraldTint,
       backgroundColor: Colors.white,
+      elevation: 0,
+      labelTextStyle: WidgetStatePropertyAll(
+        LestarType.body(size: 12, wght: 700, color: LestarTokens.ink),
+      ),
     ),
-    // Agent F: perkaya di sini. Jangan mengubah tiga hal di atas.
   );
 }
