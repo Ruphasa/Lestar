@@ -28,8 +28,10 @@
 
 - `dart format lib/features/partner lib/core/theme/plain.dart test/features/partner` — 10 berkas terformat.
 - `flutter analyze --no-pub` — **No issues found**.
-- `flutter test --no-pub test/features/partner` — **5 test lulus**.
-- `flutter test --no-pub` — **71 test seluruh repo lulus**.
+- `flutter test --no-pub test/features/partner` — **8 test lulus**, termasuk reload realtime, filter preferensi, empty state, viewport 390×900, dan seluruh transisi repository.
+- `flutter test --no-pub` — **74 test seluruh repo lulus**.
+- `flutter test --no-pub tool/smoke_supabase.dart` — **8 smoke test live lulus**; akun Pak Budi, preferensi `wet`, radius 10 km, dan `nearby_waste` 2 batch/16,6 kg terverifikasi terhadap Supabase sungguhan.
+- `flutter build apk --release --dart-define=DEMO=true --no-pub` — berhasil menghasilkan `build/app/outputs/flutter-apk/app-release.apk` berukuran 75,2 MB.
 - Pencarian efek terlarang hanya menemukan satu `BoxShadow`, yaitu glow tombol utama yang memang diizinkan.
 
 ## Yang belum dapat dinyatakan lulus
@@ -50,3 +52,15 @@
 3. Ketuk pin memfokuskan satu batch di Beranda; angka dan tombol berikutnya hanya berlaku pada pin pilihan itu.
 4. Riwayat memakai `price` batch sebagai dasar `PERKIRAAN HEMAT BIAYA`; tidak ada angka biaya hardcode.
 5. Komponen statistik Plain dibuat lokal karena `StatTile` bersama memakai alpha pada teks redup, bertentangan dengan aturan F tentang teks tanpa opacity dan kontras isi minimal 7:1.
+
+## Panduan untuk agent review
+
+- **Spec utama:** `docs/prompts/F.md`.
+- **Fixed point sebelum Agent F:** `ef6f2f0`.
+- **Diff:** `git diff ef6f2f0...HEAD`.
+- **Daftar commit:** `git log ef6f2f0..HEAD --oneline`.
+- **Verifikasi cepat:** `flutter analyze --no-pub && flutter test --no-pub`.
+- **Verifikasi live data:** `flutter test --no-pub tool/smoke_supabase.dart`.
+- **APK demo:** `build/app/outputs/flutter-apk/app-release.apk`.
+
+Review diminta memisahkan dua dependensi lintas-agent dari temuan implementasi F: tampilan notifikasi merchant membutuhkan Agent A/D, sedangkan uji baca 1,5 meter membutuhkan perangkat Android fisik. Seluruh source, test, dan build yang dimiliki Agent F sudah dapat diperiksa tanpa perubahan tambahan.
