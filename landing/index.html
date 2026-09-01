@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#EDE5D8">
+  <title>Lestar - Setiap kilogram punya jalur nilai</title>
+  <meta name="description" content="Lestar menghubungkan merchant F&amp;B, konsumen, dan pengolah limbah organik dalam satu alur kaskade.">
+  <link rel="icon" href="assets/logo-glyph.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script>document.documentElement.classList.add('js')</script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#konten-utama">Lewati ke konten utama</a>
+
+  <header class="site-header" aria-label="Navigasi utama">
+    <a class="wordmark" href="#top" aria-label="Lestar, kembali ke awal">
+      <img src="assets/logo-glyph.svg" width="44" height="32" alt="">
+      <span>Lestar</span>
+    </a>
+    <nav aria-label="Navigasi landing page">
+      <a href="#cara-kerja">Cara kerja</a>
+      <a href="#dampak">Dampak</a>
+      <a class="button button--compact" href="/public/lestar.apk" download>Unduh APK</a>
+    </nav>
+  </header>
+
+  <main id="konten-utama">
+    <section class="hero" id="top" aria-labelledby="hero-title">
+      <div class="hero__copy">
+        <p class="eyebrow">Ekonomi sirkular tiga sisi</p>
+        <h1 id="hero-title">Setiap kilogram punya jalur nilai</h1>
+        <p>Platform ekonomi sirkular yang menghubungkan merchant F&amp;B, konsumen, dan pengolah limbah organik dalam satu alur kaskade.</p>
+        <p>Dicegah sebelum menjadi surplus, diselamatkan lewat B2C, lalu dialihkan ke B2B bila tidak layak dikonsumsi.</p>
+        <div class="hero__actions">
+          <a class="button" href="/public/lestar.apk" download>Unduh APK</a>
+          <a class="text-link" href="#cara-kerja">Lihat cara kerjanya <span aria-hidden="true">&rarr;</span></a>
+        </div>
+      </div>
+      <img class="hero__logo" src="assets/logo-full.png" width="1200" height="1200" alt="Logo Lestar berbentuk infinity dari sulur, daun, dan buah">
+    </section>
+
+    <section id="masalah" aria-labelledby="masalah-title">
+      <h2 id="masalah-title">Nilai pangan hilang dalam skala nasional</h2>
+      <p>Food waste menghapus nilai pangan, ekonomi, dan lingkungan sebelum sempat dipulihkan.</p>
+      <dl class="problem-facts">
+        <div>
+          <dt>14,73 juta ton</dt>
+          <dd>sampah makanan Indonesia per tahun</dd>
+        </div>
+        <div>
+          <dt>Rp213-551 triliun</dt>
+          <dd>kerugian ekonomi per tahun</dd>
+        </div>
+        <div>
+          <dt>7,29%</dt>
+          <dd>kontribusi emisi gas rumah kaca</dd>
+        </div>
+        <div>
+          <dt>40,76%</dt>
+          <dd>porsi sisa makanan dari total sampah nasional</dd>
+        </div>
+      </dl>
+      <p class="source">Sumber: UNEP Food Waste Index 2024 &middot; KLHK 2025</p>
+    </section>
+
+    <section id="cara-kerja" aria-labelledby="kaskade-title">
+      <h2 id="kaskade-title">Satu surplus, dua jalur pemulihan</h2>
+      <p>Validasi fisik adalah gerbang nyata sebelum surplus masuk ke jalur yang tepat.</p>
+      <div class="cascade" data-reveal>
+        <img class="cascade__art cascade__art--desktop" src="assets/cascade.svg" width="1229" height="522" alt="" aria-hidden="true">
+        <img class="cascade__art cascade__art--mobile" src="assets/cascade-mobile.svg" width="1205" height="522" alt="" aria-hidden="true">
+        <ol class="cascade__steps">
+          <li><strong>Surplus</strong><span>Merchant mencatat pangan yang belum terjual.</span></li>
+          <li><strong>Triage AI</strong><span>Sistem membantu mengarahkan surplus berdasarkan data yang tersedia.</span></li>
+          <li><strong>Validasi Fisik</strong><span>Merchant memeriksa kelayakan pangan sebelum penyaluran.</span></li>
+          <li>
+            <strong>Jalur pemulihan</strong>
+            <ol>
+              <li><strong>Flash Sale B2C</strong><span>Untuk surplus yang masih layak dikonsumsi.</span></li>
+              <li><strong>Limbah Organik B2B</strong><span>Untuk bahan yang tidak layak dikonsumsi.</span></li>
+            </ol>
+          </li>
+          <li><strong>Laporan ESG</strong><span>Setiap penyaluran tercatat sebagai dampak operasional.</span></li>
+        </ol>
+      </div>
+    </section>
+
+    <section id="aktor" aria-labelledby="aktor-title">
+      <h2 id="aktor-title">Tiga dunia kerja, tiga antarmuka</h2>
+      <p>Lestar tidak memaksakan satu design system ke tiga aktor yang hidup di dunia berbeda.</p>
+      <div class="actors">
+        <article class="actor actor--consumer">
+          <h3>Konsumen</h3>
+          <p>Pengalaman ringan dan menyenangkan untuk berburu penawaran.</p>
+        </article>
+        <article class="actor actor--merchant">
+          <h3>Merchant</h3>
+          <p>Kokpit data untuk keputusan operasional.</p>
+        </article>
+        <article class="actor actor--partner">
+          <h3>Pengepul</h3>
+          <p>Antarmuka yang terbaca di luar ruangan dan dapat digunakan dengan satu tangan.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="buffer" aria-labelledby="buffer-title">
+      <h2 id="buffer-title">Mencegah sebelum memulihkan</h2>
+      <p>Buffer Intelligence memakai LSTM untuk memprediksi permintaan besok. Merchant berani memproduksi lebih banyak karena setiap surplus punya jalur keluar.</p>
+      <p>Asal setiap prediksi dicatat pada <code>forecasts.source</code>.</p>
+    </section>
+
+    <section id="dampak" aria-labelledby="dampak-title">
+      <h2 id="dampak-title">Target 12 bulan yang dapat diukur</h2>
+      <dl class="impact-targets">
+        <div>
+          <dt>200 merchant</dt>
+          <dd>merchant F&amp;B onboarded</dd>
+        </div>
+        <div>
+          <dt>3.000 transaksi per bulan</dt>
+          <dd>transaksi B2C</dd>
+        </div>
+        <div>
+          <dt>3.000 kg limbah tersalurkan</dt>
+          <dd>volume limbah B2B per bulan</dd>
+        </div>
+        <div>
+          <dt>4.500 kg CO2eq per bulan</dt>
+          <dd>estimasi CO2 terselamatkan</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section id="unduh" aria-labelledby="unduh-title">
+      <h2 id="unduh-title">Coba Lestar di Android</h2>
+      <p>Unduh APK Lestar untuk mencoba alur demo. Ukuran berkas: 75,2 MB.</p>
+      <p><a class="button" href="/public/lestar.apk" download>Unduh APK</a></p>
+      <h3>Cara memasang APK</h3>
+      <ol>
+        <li>Unduh APK.</li>
+        <li>Izinkan instalasi dari sumber ini saat Android meminta.</li>
+        <li>Buka Lestar dan pilih salah satu akun demo.</li>
+      </ol>
+      <h3>Akun demo</h3>
+      <dl class="demo-accounts">
+        <div><dt>Merchant</dt><dd><code>merchant@lestar.id</code></dd></div>
+        <div><dt>Konsumen</dt><dd><code>amira@lestar.id</code></dd></div>
+        <div><dt>Pengepul</dt><dd><code>budi@lestar.id</code></dd></div>
+        <div><dt>Kata sandi bersama</dt><dd><code>lestar2026</code></dd></div>
+      </dl>
+      <p class="privacy-note" id="privasi"><a href="#privasi">Privasi</a>: gunakan akun demo hanya untuk demonstrasi.</p>
+    </section>
+  </main>
+
+  <footer>
+    <p>Lestar &middot; Dimulai dari Malang, dikembangkan menuju skala nasional.</p>
+    <p><a href="#privasi">Privasi</a></p>
+  </footer>
+</body>
+</html>

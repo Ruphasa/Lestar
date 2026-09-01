@@ -46,6 +46,22 @@ foreach ($id in @('cara-kerja', 'aktor', 'dampak', 'unduh')) {
     throw "Anchor wajib tidak ditemukan: #$id"
   }
 }
+$orderedMarkers = @(
+  '<main id="konten-utama">', '<section class="hero"',
+  'id="masalah"', 'id="cara-kerja"', 'id="aktor"',
+  'id="buffer"', 'id="dampak"', 'id="unduh"'
+)
+$cursor = -1
+foreach ($marker in $orderedMarkers) {
+  $next = $html.IndexOf($marker, $cursor + 1, [System.StringComparison]::Ordinal)
+  if ($next -lt 0) { throw "Marker semantik hilang atau salah urutan: $marker" }
+  $cursor = $next
+}
+if (($html | Select-String -Pattern '<h1[ >]' -AllMatches).Matches.Count -ne 1) {
+  throw 'Halaman harus memiliki tepat satu h1'
+}
+if ($html -notmatch 'href="#konten-utama"') { throw 'Skip link tidak ditemukan' }
+if ($html -notmatch 'href="/public/lestar\.apk"[^>]*download') { throw 'Tautan APK tidak valid' }
 if ($html -match 'mockup\.png|https://fonts\.googleapis\.com|<script[^>]+src="https?://') {
   throw 'Ditemukan aset terlarang atau dependency eksternal'
 }
