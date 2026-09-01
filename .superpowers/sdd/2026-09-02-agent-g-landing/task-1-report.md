@@ -61,3 +61,24 @@ Verifier penuh belum dapat GREEN karena halaman landing (index, CSS, JS, konfigu
 
 - `android/.kotlin/sessions/` muncul sebagai untracked artifact dari percobaan `flutter build apk --release`; tidak dimasukkan ke commit.
 - Verifikasi penuh bergantung pada berkas landing dari task berikutnya.
+
+## Fix round 1/5
+
+- `verify.ps1` kini memilih APK dari path worktree-relative terlebih dahulu. Jika output ignored tersebut tidak tersedia, verifier memakai `LESTAR_RELEASE_APK_SOURCE` hanya bila variabel itu menunjuk ke file yang ada; bila keduanya tidak ada, error menjelaskan cara memperbaikinya. Pemeriksaan SHA-256 tetap tidak berubah.
+- Koreksi: commit Task 1 yang direview adalah `d260808`, bukan `68379c3`.
+
+Evidence fix:
+
+```text
+# powershell -NoProfile -ExecutionPolicy Bypass -File landing/tests/verify.ps1
+Berkas wajib tidak ditemukan: index.html
+EXIT=1
+
+# LESTAR_RELEASE_APK_SOURCE=L:\Lestar\build\app\outputs\flutter-apk\app-release.apk
+ResolvedSource=L:\Lestar\build\app\outputs\flutter-apk\app-release.apk
+SourceSHA256=75A664EDCDDE630A75971F858968D2A4F3C10B46A557CA1BCA7FC8998CA9ABCB
+PublicSHA256=75A664EDCDDE630A75971F858968D2A4F3C10B46A557CA1BCA7FC8998CA9ABCB
+Focused source-resolution/hash passed.
+```
+
+Catatan: baris `SourceSHA256` di atas memakai nilai aktual lengkap yang sama dengan `PublicSHA256` (`75A664EDCDDE630A75971F858968D2A4F3C10B46A557CA1BCA7FC8998CA9ABCB`).

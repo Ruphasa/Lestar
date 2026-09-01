@@ -48,7 +48,14 @@ if ($css -notmatch 'prefers-reduced-motion' -or $css -notmatch ':focus-visible')
 
 $sourceApk = Join-Path $repoRoot 'build/app/outputs/flutter-apk/app-release.apk'
 $publicApk = Join-Path $landingRoot 'public/lestar.apk'
-if (-not (Test-Path -LiteralPath $sourceApk -PathType Leaf)) { throw 'APK release sumber tidak ditemukan' }
+if (-not (Test-Path -LiteralPath $sourceApk -PathType Leaf)) {
+  $configuredSource = $env:LESTAR_RELEASE_APK_SOURCE
+  if ([string]::IsNullOrWhiteSpace($configuredSource) -or
+      -not (Test-Path -LiteralPath $configuredSource -PathType Leaf)) {
+    throw 'APK release sumber tidak ditemukan; set LESTAR_RELEASE_APK_SOURCE ke file APK yang ada'
+  }
+  $sourceApk = $configuredSource
+}
 if ((Get-FileHash -Algorithm SHA256 -LiteralPath $sourceApk).Hash -ne
     (Get-FileHash -Algorithm SHA256 -LiteralPath $publicApk).Hash) {
   throw 'APK publik tidak identik dengan APK release sumber'
