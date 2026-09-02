@@ -34,6 +34,10 @@ foreach ($shot in @('consumer','merchant','partner')) {
     throw "Screenshot $shot harus 1080x2400; ditemukan ${width}x${height}"
   }
 }
+$rejectedMerchantSha256 = 'D11770B5875E45D6C4D6ECD4D1622979C51F8ECB41C80C54A14058AEF77B6F67'
+if ((Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $landingRoot 'assets/screenshots/merchant.png')).Hash -eq $rejectedMerchantSha256) {
+  throw 'Screenshot merchant lama yang menampilkan layar login tidak boleh dipakai'
+}
 
 foreach ($svgName in @('logo-glyph.svg','value-route.svg','cascade.svg','cascade-mobile.svg')) {
   $svgPath = Join-Path $landingRoot "assets/$svgName"
@@ -125,8 +129,27 @@ if ($html -notmatch 'loading="lazy"' -or $html -notmatch '<img[^>]+alt="[^"]+"')
   throw 'Gambar screenshot wajib memiliki lazy loading dan alt text deskriptif'
 }
 if ($html -match 'mockup\.png') { throw 'mockup.png tidak boleh dipakai' }
-if ($css -notmatch 'pointer-events:none' -or $css -notmatch 'overflow-x:hidden') {
-  throw 'Ornamen atau proteksi overflow horizontal belum diterapkan'
+if ($css -match 'body\s*\{[^}]*overflow-x\s*:\s*(hidden|clip)') {
+  throw 'Body tidak boleh menyamarkan overflow horizontal'
+}
+foreach ($responsiveRule in @('min-width:0','min-width:320px','overflow-wrap:break-word')) {
+  if ($css -notmatch [regex]::Escape($responsiveRule)) {
+    throw "Perlindungan min-content/wrapping responsif hilang: $responsiveRule"
+  }
+}
+if ($html -notmatch 'data-hero-vine' -or $css -notmatch 'vine-draw' -or
+    $css -notmatch 'cascade-node') {
+  throw 'Motion sulur hero atau reveal node kaskade belum lengkap'
+}
+if ($css -notmatch '\.js \[data-reveal\]' -or $css -notmatch '\.js \.cascade\.is-visible') {
+  throw 'Reveal harus menjadi progressive enhancement agar tetap terbaca tanpa JavaScript'
+}
+if ($css -notmatch '\.button\{[^}]*background:var\(--forest\);color:var\(--white\)' -or
+    $css -match 'background:var\(--emerald-deep\);color:var\(--white\)') {
+  throw 'CTA tidak memakai pasangan kontras yang dapat diakses'
+}
+if ($css -notmatch '\.privacy-note a,footer a\{display:inline-flex;min-height:44px') {
+  throw 'Tautan privasi/footer belum memiliki target sentuh 44px'
 }
 $app = Get-Content -Raw -Encoding UTF8 -LiteralPath (Join-Path $landingRoot 'app.js')
 if ($app -notmatch 'IntersectionObserver' -or $app -notmatch 'prefers-reduced-motion' -or
