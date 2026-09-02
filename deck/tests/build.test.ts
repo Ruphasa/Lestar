@@ -21,6 +21,69 @@ const slideHtml = (number: number) => {
   return match[0];
 };
 
+interface CssRule {
+  selector: string;
+  declarations: Map<string, string>;
+  context: readonly string[];
+}
+
+const cssDeclarations = (body: string) => new Map(
+  body.split(';').flatMap((declaration) => {
+    const separator = declaration.indexOf(':');
+    if (separator === -1) return [];
+    return [[declaration.slice(0, separator).trim().toLowerCase(), declaration.slice(separator + 1).trim().toLowerCase()]];
+  }),
+);
+
+const closingBrace = (css: string, openingBrace: number) => {
+  let depth = 1;
+  for (let index = openingBrace + 1; index < css.length; index += 1) {
+    if (css[index] === '{') depth += 1;
+    if (css[index] === '}') depth -= 1;
+    if (depth === 0) return index;
+  }
+  throw new Error('CSS memiliki blok tanpa penutup');
+};
+
+const cssRules = (css: string, context: readonly string[] = []): CssRule[] => {
+  const rules: CssRule[] = [];
+  let cursor = 0;
+  while (cursor < css.length) {
+    const openingBrace = css.indexOf('{', cursor);
+    if (openingBrace === -1) break;
+    const selector = css.slice(cursor, openingBrace).trim();
+    const closing = closingBrace(css, openingBrace);
+    const body = css.slice(openingBrace + 1, closing);
+    if (selector.startsWith('@media')) {
+      rules.push(...cssRules(body, [...context, selector]));
+    } else if (!selector.startsWith('@')) {
+      rules.push({ selector, declarations: cssDeclarations(body), context });
+    }
+    cursor = closing + 1;
+  }
+  return rules;
+};
+
+const splitSelectors = (rule: CssRule) => rule.selector.split(',').map((selector) => ({ ...rule, selector: selector.trim() }));
+const targetsSlide = (selector: string) => /(^|[\s>+~])\.slide(?:$|[\s>+~.:#\[])/.test(selector);
+const isDeckEnhanced = (selector: string) => /(^|[\s>+~])\.deck-enhanced(?:$|[\s>+~.:#\[])/.test(selector);
+const normalizedValue = (value: string | undefined) => value?.replace(/\s*!important\s*$/, '').replace(/\s+/g, '') ?? '';
+const isZero = (value: string | undefined) => /^(?:0(?:\.0+)?|0%)$/.test(normalizedValue(value));
+
+const hidesSlide = (rule: CssRule) => {
+  const value = (property: string) => normalizedValue(rule.declarations.get(property));
+  const clipped = value('clip').replaceAll(',', '') === 'rect(0000)' || value('clip-path') === 'inset(50%)';
+  const collapsedWithOverflow = value('overflow') === 'hidden' && ['height', 'max-height', 'block-size', 'max-block-size'].some((property) => isZero(rule.declarations.get(property)));
+  return value('display') === 'none'
+    || ['hidden', 'collapse'].includes(value('visibility'))
+    || isZero(rule.declarations.get('opacity'))
+    || value('content-visibility') === 'hidden'
+    || clipped
+    || value('transform').includes('scale(0)')
+    || value('filter').includes('opacity(0)')
+    || collapsedWithOverflow;
+};
+
 describe('static deck document', () => {
   test('merender 12 section dan heading hierarchy', () => {
     expect((html.match(/<section class="slide"/g) ?? []).length).toBe(12);
@@ -44,6 +107,13 @@ describe('static deck document', () => {
     expect(html).toContain('<main id="deck" data-deck>');
     expect(html).not.toMatch(/<section class="slide"[^>]*(?:\shidden(?:\s|=|>)|\saria-hidden=)/);
     expect(deckCss).toContain('.slide{position:relative;min-height:100svh');
+    const hiddenBaselineSlideRules = cssRules(deckCss).flatMap(splitSelectors).filter((rule) =>
+      targetsSlide(rule.selector)
+      && !isDeckEnhanced(rule.selector)
+      && !rule.context.some((context) => /^@media\s+print\b/.test(context))
+      && hidesSlide(rule),
+    );
+    expect(hiddenBaselineSlideRules).toEqual([]);
     expect(deckCss).toContain('@media screen{.slide__sources{display:none}}');
     expect(printCss).toContain('.slide__sources{display:block}');
   });
