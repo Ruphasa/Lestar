@@ -133,6 +133,19 @@ if ($html -match 'mockup\.png') { throw 'mockup.png tidak boleh dipakai' }
 if ($css -match 'body\s*\{[^}]*overflow-x\s*:\s*(hidden|clip)') {
   throw 'Body tidak boleh menyamarkan overflow horizontal'
 }
+if ($compactCss -match '(?:html|body)\{[^}]*min-width:') {
+  throw 'Root tidak boleh memakai min-width yang menciptakan overflow saat scrollbar desktop hadir'
+}
+foreach ($originRule in @(
+  '\.hero::before\{[^}]*transform-origin:rightbottom',
+  '\.hero::after\{[^}]*transform-origin:righttop',
+  '\.buffer::after\{[^}]*transform-origin:righttop',
+  '\.download::before\{[^}]*transform-origin:righttop'
+)) {
+  if ($compactCss -notmatch $originRule) {
+    throw "Anchor transform ornamen kanan hilang: $originRule"
+  }
+}
 foreach ($responsiveRule in @('min-width:0','min-width:320px','overflow-wrap:break-word')) {
   if ($css -notmatch [regex]::Escape($responsiveRule)) {
     throw "Perlindungan min-content/wrapping responsif hilang: $responsiveRule"

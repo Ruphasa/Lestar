@@ -4,8 +4,8 @@
 :root{--paper:#EDE5D8;--white:#FFFFFF;--forest:#265938;--emerald-deep:#009966;--emerald:#00BC7D;--orange:#F38222;--orange-text:#C2540E;--ink:#0A0A0A;--ink-soft:#171717;--muted:#737373;--surface-grey:#F5F5F5;--space-1:.5rem;--space-2:1rem;--space-3:1.5rem;--space-4:2rem;--space-5:3rem;--space-6:4.5rem;--max:76rem}
 
 *,*::before,*::after{box-sizing:border-box}
-html{min-width:320px;scroll-behavior:smooth}
-body{min-width:320px;margin:0;background:var(--white);color:var(--ink);font:400 1rem/1.65 Inter,system-ui,sans-serif;overflow-wrap:break-word}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--white);color:var(--ink);font:400 1rem/1.65 Inter,system-ui,sans-serif;overflow-wrap:break-word}
 body::before{position:fixed;inset:0;z-index:-1;content:"";pointer-events:none;background-image:url("assets/value-route.svg");background-position:right 82rem;background-repeat:no-repeat;background-size:25rem auto;opacity:.06}
 img,svg{display:block;max-width:100%}
 main,section,header,footer,nav,.hero__copy,.actors,.actor,.cascade,.cascade__steps,.problem-facts,.impact-targets,.demo-accounts{min-width:0}
@@ -42,8 +42,8 @@ section>p:not(.eyebrow):not(.source){max-width:44rem;color:var(--ink-soft)}
 .eyebrow{margin-bottom:.75rem;color:var(--forest);font-family:"Plus Jakarta Sans",system-ui,sans-serif;font-size:.79rem;font-weight:800;letter-spacing:.11em;text-transform:uppercase}
 
 .hero{min-height:100dvh;display:grid;align-items:center;gap:var(--space-5);padding-top:7rem;padding-bottom:4rem;background:var(--paper)}
-.hero::before{position:absolute;right:1rem;bottom:1rem;width:min(58%,34rem);height:min(58%,34rem);border:1px solid var(--forest);border-radius:50% 50% 45% 55%;content:"";pointer-events:none;opacity:.23;transform:rotate(-18deg)}
-.hero::after{position:absolute;right:4%;top:18%;width:9rem;height:9rem;border-top:2px solid var(--orange);border-right:2px solid var(--orange);border-radius:80% 20% 80% 20%;content:"";pointer-events:none;opacity:.7;transform:rotate(22deg)}
+.hero::before{position:absolute;right:1rem;bottom:1rem;width:min(58%,34rem);height:min(58%,34rem);border:1px solid var(--forest);border-radius:50% 50% 45% 55%;content:"";pointer-events:none;opacity:.23;transform:rotate(-18deg);transform-origin:right bottom}
+.hero::after{position:absolute;right:4%;top:18%;width:9rem;height:9rem;border-top:2px solid var(--orange);border-right:2px solid var(--orange);border-radius:80% 20% 80% 20%;content:"";pointer-events:none;opacity:.7;transform:rotate(22deg);transform-origin:right top}
 .hero__vine{position:absolute;right:1rem;bottom:2rem;width:min(58%,34rem);height:auto;pointer-events:none;opacity:.72;transform:rotate(-8deg)}
 .hero__vine path:first-child{stroke:var(--forest);stroke-linecap:round;stroke-width:7}.hero__vine path:not(:first-child){fill:var(--forest)}.hero__vine circle{fill:var(--orange)}
 .hero__copy{position:relative;z-index:2;max-width:43rem}
@@ -89,7 +89,7 @@ section>p:not(.eyebrow):not(.source){max-width:44rem;color:var(--ink-soft)}
 .actor--partner .actor__screen{margin-left:8%;border-color:var(--emerald-deep)}
 
 .buffer{display:grid;gap:var(--space-4);align-items:center;background:var(--forest);color:var(--white)}
-.buffer::after{position:absolute;right:1rem;bottom:1rem;width:16rem;height:16rem;border:1px solid var(--emerald);border-radius:50% 30% 55% 45%;content:"";pointer-events:none;opacity:.5;transform:rotate(35deg)}
+.buffer::after{position:absolute;right:1rem;bottom:1rem;width:16rem;height:16rem;border:1px solid var(--emerald);border-radius:50% 30% 55% 45%;content:"";pointer-events:none;opacity:.5;transform:rotate(35deg);transform-origin:right top}
 .buffer h2{color:var(--white)}
 .buffer .eyebrow{color:var(--white)}
 .buffer__copy{position:relative;z-index:1;max-width:43rem}
@@ -105,7 +105,7 @@ section>p:not(.eyebrow):not(.source){max-width:44rem;color:var(--ink-soft)}
 .impact-targets>div:last-child dt{color:var(--forest)}
 
 .download{background:var(--paper)}
-.download::before{position:absolute;right:7%;top:2rem;width:5rem;height:8rem;border-top:2px solid var(--forest);border-left:2px solid var(--forest);border-radius:100% 0 0 0;content:"";pointer-events:none;opacity:.65;transform:rotate(28deg)}
+.download::before{position:absolute;right:7%;top:2rem;width:5rem;height:8rem;border-top:2px solid var(--forest);border-left:2px solid var(--forest);border-radius:100% 0 0 0;content:"";pointer-events:none;opacity:.65;transform:rotate(28deg);transform-origin:right top}
 .download .button{margin-top:.25rem}
 .download h3{margin-top:var(--space-4)}
 .download ol{max-width:42rem;padding-left:1.4rem}
