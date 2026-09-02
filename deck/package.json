@@ -1,0 +1,26 @@
+{
+  "name": "lestar-web-deck",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "check": "astro check",
+    "test": "bun test",
+    "build": "astro check && astro build",
+    "preview": "astro preview",
+    "sync:assets": "bun scripts/sync-assets.ts",
+    "qa": "bun tests/browser-qa.ts",
+    "export:pdf": "bun scripts/export-pdf.ts",
+    "verify": "bun tests/verify.ts"
+  },
+  "dependencies": {
+    "astro": "7.2.10"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.10",
+    "@types/bun": "1.3.14",
+    "pdf-lib": "1.17.1",
+    "playwright": "1.58.2",
+    "typescript": "6.0.3"
+  }
+}
