@@ -92,6 +92,7 @@ section>p:not(.eyebrow):not(.source){max-width:44rem;color:var(--ink-soft)}
 .buffer::after{position:absolute;right:1rem;bottom:1rem;width:16rem;height:16rem;border:1px solid var(--emerald);border-radius:50% 30% 55% 45%;content:"";pointer-events:none;opacity:.5;transform:rotate(35deg);transform-origin:right top}
 .buffer h2{color:var(--white)}
 .buffer .eyebrow{color:var(--white)}
+.buffer code{color:var(--ink)}
 .buffer__copy{position:relative;z-index:1;max-width:43rem}
 .buffer__copy p{color:var(--white)}
 .buffer__signal{position:relative;z-index:1;display:grid;gap:.35rem;justify-items:start;padding:var(--space-3) 0;border-top:1px solid var(--emerald);border-bottom:1px solid var(--emerald);font-family:"Plus Jakarta Sans",system-ui,sans-serif}

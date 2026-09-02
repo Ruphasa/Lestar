@@ -166,6 +166,31 @@ $bufferEyebrowRules = @([regex]::Matches($css, '(?<selector>[^{}]+)\{(?<body>[^{
 if ($bufferEyebrowRules.Count -eq 0) {
   throw 'Selector .buffer .eyebrow harus mendeklarasikan color:var(--white)'
 }
+$bufferCodeNode = [regex]::Match(
+  $html,
+  '<section\b[^>]*\bid\s*=\s*["'']buffer["''][^>]*>.*?<code>\s*forecasts\.source\s*</code>.*?</section>',
+  [System.Text.RegularExpressions.RegexOptions]::IgnoreCase -bor
+    [System.Text.RegularExpressions.RegexOptions]::Singleline
+)
+if (-not $bufferCodeNode.Success) {
+  throw 'Inline code forecasts.source harus berada di section #buffer'
+}
+$bufferCodeRules = @([regex]::Matches($css, '(?<selector>[^{}]+)\{(?<body>[^{}]*)\}') |
+  Where-Object {
+    $_.Groups['selector'].Value -match '(?m)(?:^|,)\s*\.buffer\s+code\s*(?:,|$)' -and
+      $_.Groups['body'].Value -match '(?m)(?:^|;)\s*color\s*:\s*var\(\s*--ink\s*\)\s*(?:;|$)'
+  })
+if ($bufferCodeRules.Count -eq 0) {
+  throw 'Selector .buffer code harus mendeklarasikan color:var(--ink)'
+}
+$codeBackgroundRules = @([regex]::Matches($css, '(?<selector>[^{}]+)\{(?<body>[^{}]*)\}') |
+  Where-Object {
+    $_.Groups['selector'].Value -match '(?m)(?:^|,)\s*code\s*(?:,|$)' -and
+      $_.Groups['body'].Value -match '(?m)(?:^|;)\s*background\s*:\s*var\(\s*--surface-grey\s*\)\s*(?:;|$)'
+  })
+if ($codeBackgroundRules.Count -eq 0) {
+  throw 'Selector code harus mendeklarasikan background:var(--surface-grey)'
+}
 $cssTokenHex = @{}
 foreach ($tokenMatch in [regex]::Matches($css, '(?<![\w-])(?<token>--[a-z-]+)\s*:\s*(?<hex>#[0-9a-fA-F]{6})')) {
   $cssTokenHex[$tokenMatch.Groups['token'].Value] = $tokenMatch.Groups['hex'].Value
@@ -192,7 +217,8 @@ function Get-ContrastRatio {
 foreach ($pair in @(
     @('--paper', '--forest'),
     @('--paper', '--ink'),
-    @('--forest', '--white')
+    @('--forest', '--white'),
+    @('--ink', '--surface-grey')
   )) {
   if ((Get-ContrastRatio $pair[0] $pair[1]) -lt 4.5) {
     throw "Kontras token gagal WCAG: $($pair[0]) / $($pair[1])"
