@@ -144,6 +144,25 @@ if ($html -notmatch 'data-hero-vine' -or $css -notmatch 'vine-draw' -or
 if ($css -notmatch '\.js \[data-reveal\]' -or $css -notmatch '\.js \.cascade\.is-visible') {
   throw 'Reveal harus menjadi progressive enhancement agar tetap terbaca tanpa JavaScript'
 }
+$bufferEyebrow = [regex]::Match($css, '\.buffer \.eyebrow\{[^}]*color:var\((?<token>--[a-z-]+)\)')
+if (-not $bufferEyebrow.Success -or $bufferEyebrow.Groups['token'].Value -ne '--white') {
+  throw 'Eyebrow Buffer harus memakai teks putih berkontras tinggi pada latar forest'
+}
+$vineAnimation = [regex]::Match($css, '\.js \.hero__vine path:first-child\{[^}]*animation:vine-draw\s+(?<duration>[0-9.]+)ms\s+(?<delay>[0-9.]+)ms')
+if (-not $vineAnimation.Success -or ([double]$vineAnimation.Groups['duration'].Value + [double]$vineAnimation.Groups['delay'].Value) -gt 400) {
+  throw 'Total draw sulur hero (delay + duration) harus <= 400ms'
+}
+$cascadeDelays = [regex]::Matches($css, '\.js \.cascade\.is-visible \.cascade__steps>li:nth-child\(\d+\)\{animation-delay:(?<delay>[0-9.]+)ms')
+if ($cascadeDelays.Count -ne 5) { throw 'Lima delay node kaskade wajib didefinisikan eksplisit' }
+$previousDelay = $null
+foreach ($match in $cascadeDelays) {
+  $delay = [double]$match.Groups['delay'].Value
+  if ($null -ne $previousDelay) {
+    $increment = $delay - $previousDelay
+    if ($increment -lt 30 -or $increment -gt 50) { throw 'Increment delay node kaskade harus antara 30ms dan 50ms' }
+  }
+  $previousDelay = $delay
+}
 if ($css -notmatch '\.button\{[^}]*background:var\(--forest\);color:var\(--white\)' -or
     $css -match 'background:var\(--emerald-deep\);color:var\(--white\)') {
   throw 'CTA tidak memakai pasangan kontras yang dapat diakses'
