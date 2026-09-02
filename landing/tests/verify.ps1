@@ -145,6 +145,14 @@ if ($html -notmatch 'data-hero-vine' -or $css -notmatch 'vine-draw' -or
 if ($css -notmatch '\.js \[data-reveal\]' -or $css -notmatch '\.js \.cascade\.is-visible') {
   throw 'Reveal harus menjadi progressive enhancement agar tetap terbaca tanpa JavaScript'
 }
+$bufferEyebrowRules = @([regex]::Matches($css, '(?<selector>[^{}]+)\{(?<body>[^{}]*)\}') |
+  Where-Object {
+    $_.Groups['selector'].Value -match '(?m)(?:^|,)\s*\.buffer\s+\.eyebrow\s*(?:,|$)' -and
+      $_.Groups['body'].Value -match '(?m)(?:^|;)\s*color\s*:\s*var\(\s*--white\s*\)\s*(?:;|$)'
+  })
+if ($bufferEyebrowRules.Count -eq 0) {
+  throw 'Selector .buffer .eyebrow harus mendeklarasikan color:var(--white)'
+}
 $cssTokenHex = @{}
 foreach ($tokenMatch in [regex]::Matches($css, '(?<![\w-])(?<token>--[a-z-]+)\s*:\s*(?<hex>#[0-9a-fA-F]{6})')) {
   $cssTokenHex[$tokenMatch.Groups['token'].Value] = $tokenMatch.Groups['hex'].Value
