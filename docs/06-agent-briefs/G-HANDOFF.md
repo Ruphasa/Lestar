@@ -27,8 +27,7 @@
 
 ## Verifikasi Final
 
-- `LESTAR_RELEASE_APK_SOURCE=L:\Lestar\build\app\outputs\flutter-apk\app-release.apk powershell -NoProfile -ExecutionPolicy Bypass -File landing/tests/verify.ps1` -> `Landing verification passed.`
+- `$env:LESTAR_RELEASE_APK_SOURCE='L:\Lestar\build\app\outputs\flutter-apk\app-release.apk'; powershell -NoProfile -ExecutionPolicy Bypass -File landing/tests/verify.ps1` -> `Landing verification passed.`
 - `git diff --check` -> lulus tanpa output.
 - Browser QA lokal: Chrome headless Playwright Chromium 1234 via CDP pada lima viewport wajib; screenshot dan JSON bukti berada di direktori ignored `.superpowers/sdd/2026-09-02-agent-g-landing/qa-task-5/`.
 - Browser QA publik: URL publik dibuka pada mobile 375x812 dan desktop 1440x900; h1 cocok, CTA dalam viewport, dan forced horizontal scroll `0`.
-
