@@ -27,7 +27,7 @@ code{padding:.1em .3em;background:var(--surface-grey);font-family:Inter,system-u
 .wordmark img{width:44px;height:32px;object-fit:contain}
 nav{display:flex;min-width:0;align-items:center;gap:.15rem}
 nav>a:not(.button){display:none;min-height:44px;align-items:center;padding:.6rem .7rem;text-decoration:none}
-nav>a:not(.button):hover,.text-link:hover{color:var(--orange-text)}
+nav>a:not(.button):hover,.text-link:hover{color:var(--forest);text-decoration:underline;text-underline-offset:.23em}
 
 .button{display:inline-flex;min-height:44px;align-items:center;justify-content:center;padding:.72rem 1.15rem;border:2px solid var(--forest);background:var(--forest);color:var(--white);font-weight:750;line-height:1.2;text-align:center;text-decoration:none;touch-action:manipulation;transition:transform 180ms ease,background-color 180ms ease,color 180ms ease}
 .button:hover{background:var(--forest);border-color:var(--forest)}
@@ -121,7 +121,7 @@ footer p{margin:0}
 
 .js [data-reveal]{opacity:0;transform:translateY(1.25rem);transition:opacity 380ms ease,transform 380ms ease}
 .js [data-reveal].is-visible{opacity:1;transform:none}
-.js .hero__vine path:first-child{stroke-dasharray:1;stroke-dashoffset:1;animation:vine-draw 320ms 80ms cubic-bezier(.23,1,.32,1) forwards}.js .hero__vine path:not(:first-child),.js .hero__vine circle{opacity:0;animation:vine-fruit 160ms 320ms ease-out forwards}
+.js .hero__vine path:first-child{stroke-dasharray:1;stroke-dashoffset:1;animation:vine-draw 300ms 0ms cubic-bezier(.23,1,.32,1) forwards}.js .hero__vine path:not(:first-child),.js .hero__vine circle{opacity:0;animation:vine-fruit 100ms 300ms ease-out forwards}
 .js .cascade.is-visible .cascade__steps>li{opacity:0;animation:cascade-node 360ms ease-out forwards}.js .cascade.is-visible .cascade__steps>li:nth-child(1){animation-delay:40ms}.js .cascade.is-visible .cascade__steps>li:nth-child(2){animation-delay:80ms}.js .cascade.is-visible .cascade__steps>li:nth-child(3){animation-delay:120ms}.js .cascade.is-visible .cascade__steps>li:nth-child(4){animation-delay:160ms}.js .cascade.is-visible .cascade__steps>li:nth-child(5){animation-delay:200ms}
 @keyframes vine-draw{to{stroke-dashoffset:0}}@keyframes vine-fruit{to{opacity:1}}@keyframes cascade-node{to{opacity:1;transform:translateY(0)}}
 

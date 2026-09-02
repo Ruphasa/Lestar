@@ -34,9 +34,10 @@ foreach ($shot in @('consumer','merchant','partner')) {
     throw "Screenshot $shot harus 1080x2400; ditemukan ${width}x${height}"
   }
 }
-$rejectedMerchantSha256 = 'D11770B5875E45D6C4D6ECD4D1622979C51F8ECB41C80C54A14058AEF77B6F67'
-if ((Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $landingRoot 'assets/screenshots/merchant.png')).Hash -eq $rejectedMerchantSha256) {
-  throw 'Screenshot merchant lama yang menampilkan layar login tidak boleh dipakai'
+$approvedMerchantSha256 = '8C9FF46F7E4E3C91BACFAE4B77D4A7EC5F4C6FB73D14A08A0F0B897EC5D698B0'
+$merchantSha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $landingRoot 'assets/screenshots/merchant.png')).Hash.ToUpperInvariant()
+if ($merchantSha256 -ne $approvedMerchantSha256) {
+  throw "Screenshot merchant harus cocok dengan capture terautentik yang disetujui; ditemukan $merchantSha256"
 }
 
 foreach ($svgName in @('logo-glyph.svg','value-route.svg','cascade.svg','cascade-mobile.svg')) {
@@ -144,13 +145,60 @@ if ($html -notmatch 'data-hero-vine' -or $css -notmatch 'vine-draw' -or
 if ($css -notmatch '\.js \[data-reveal\]' -or $css -notmatch '\.js \.cascade\.is-visible') {
   throw 'Reveal harus menjadi progressive enhancement agar tetap terbaca tanpa JavaScript'
 }
-$bufferEyebrow = [regex]::Match($css, '\.buffer \.eyebrow\{[^}]*color:var\((?<token>--[a-z-]+)\)')
-if (-not $bufferEyebrow.Success -or $bufferEyebrow.Groups['token'].Value -ne '--white') {
-  throw 'Eyebrow Buffer harus memakai teks putih berkontras tinggi pada latar forest'
+$cssTokenHex = @{}
+foreach ($tokenMatch in [regex]::Matches($css, '(?<![\w-])(?<token>--[a-z-]+)\s*:\s*(?<hex>#[0-9a-fA-F]{6})')) {
+  $cssTokenHex[$tokenMatch.Groups['token'].Value] = $tokenMatch.Groups['hex'].Value
 }
-$vineAnimation = [regex]::Match($css, '\.js \.hero__vine path:first-child\{[^}]*animation:vine-draw\s+(?<duration>[0-9.]+)ms\s+(?<delay>[0-9.]+)ms')
-if (-not $vineAnimation.Success -or ([double]$vineAnimation.Groups['duration'].Value + [double]$vineAnimation.Groups['delay'].Value) -gt 400) {
-  throw 'Total draw sulur hero (delay + duration) harus <= 400ms'
+function Get-RelativeLuminance {
+  param([string]$Hex)
+  $channels = 1..3 | ForEach-Object {
+    $channel = [Convert]::ToInt32($Hex.Substring($_ * 2 - 1, 2), 16) / 255
+    if ($channel -le 0.03928) { $channel / 12.92 } else { [Math]::Pow(($channel + 0.055) / 1.055, 2.4) }
+  }
+  return (0.2126 * $channels[0]) + (0.7152 * $channels[1]) + (0.0722 * $channels[2])
+}
+function Get-ContrastRatio {
+  param([string]$ForegroundToken, [string]$BackgroundToken)
+  if (-not $cssTokenHex.ContainsKey($ForegroundToken) -or -not $cssTokenHex.ContainsKey($BackgroundToken)) {
+    throw "Token kontras tidak ditemukan: $ForegroundToken / $BackgroundToken"
+  }
+  $foreground = Get-RelativeLuminance $cssTokenHex[$ForegroundToken]
+  $background = Get-RelativeLuminance $cssTokenHex[$BackgroundToken]
+  $lighter = [Math]::Max($foreground, $background)
+  $darker = [Math]::Min($foreground, $background)
+  return (($lighter + 0.05) / ($darker + 0.05))
+}
+foreach ($pair in @(
+    @('--paper', '--forest'),
+    @('--paper', '--ink'),
+    @('--forest', '--white')
+  )) {
+  if ((Get-ContrastRatio $pair[0] $pair[1]) -lt 4.5) {
+    throw "Kontras token gagal WCAG: $($pair[0]) / $($pair[1])"
+  }
+}
+$hoverRules = @([regex]::Matches($css, '(?<selector>[^{}]*:hover[^{}]*)\{(?<body>[^{}]*)\}') |
+  Where-Object { $_.Groups['selector'].Value -match 'nav|\.text-link' -and $_.Groups['body'].Value -match 'color\s*:' })
+if ($hoverRules.Count -eq 0) { throw 'Hover nav/text-link tidak ditemukan' }
+foreach ($rule in $hoverRules) {
+  $hoverColor = [regex]::Match($rule.Groups['body'].Value, 'color\s*:\s*var\((?<token>--[a-z-]+)\)')
+  if (-not $hoverColor.Success -or (Get-ContrastRatio $hoverColor.Groups['token'].Value '--paper') -lt 4.5) {
+    throw 'Hover nav/text-link harus memiliki kontras minimal 4.5:1 terhadap paper'
+  }
+}
+$vineRules = @([regex]::Matches($css, '(?<selector>[^{}]+)\{(?<body>[^{}]*)\}') |
+  Where-Object { $_.Groups['selector'].Value -match '\.hero__vine' -and $_.Groups['body'].Value -match 'animation\s*:' })
+if ($vineRules.Count -eq 0) { throw 'Deklarasi animasi sulur hero tidak ditemukan' }
+foreach ($rule in $vineRules) {
+  foreach ($animation in [regex]::Matches($rule.Groups['body'].Value, 'animation\s*:\s*(?<value>[^;}]*)')) {
+    $times = [regex]::Matches($animation.Groups['value'].Value, '(?<time>[0-9]+(?:\.[0-9]+)?)ms\b')
+    if ($times.Count -lt 1) { throw 'Setiap animasi sulur hero harus memiliki durasi ms' }
+    $duration = [double]$times[0].Groups['time'].Value
+    $delay = if ($times.Count -gt 1) { [double]$times[1].Groups['time'].Value } else { 0 }
+    if (($duration + $delay) -gt 400) {
+      throw "Total delay + durasi animasi sulur hero harus <= 400ms: $($duration + $delay)ms"
+    }
+  }
 }
 $cascadeDelays = [regex]::Matches($css, '\.js \.cascade\.is-visible \.cascade__steps>li:nth-child\(\d+\)\{animation-delay:(?<delay>[0-9.]+)ms')
 if ($cascadeDelays.Count -ne 5) { throw 'Lima delay node kaskade wajib didefinisikan eksplisit' }
