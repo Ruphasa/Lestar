@@ -54,9 +54,9 @@ const cssRules = (css: string, context: readonly string[] = []): CssRule[] => {
     const selector = css.slice(cursor, openingBrace).trim();
     const closing = closingBrace(css, openingBrace);
     const body = css.slice(openingBrace + 1, closing);
-    if (selector.startsWith('@media')) {
+    if (selector.startsWith('@')) {
       rules.push(...cssRules(body, [...context, selector]));
-    } else if (!selector.startsWith('@')) {
+    } else {
       rules.push({ selector, declarations: cssDeclarations(body), context });
     }
     cursor = closing + 1;
@@ -65,8 +65,8 @@ const cssRules = (css: string, context: readonly string[] = []): CssRule[] => {
 };
 
 const splitSelectors = (rule: CssRule) => rule.selector.split(',').map((selector) => ({ ...rule, selector: selector.trim() }));
-const targetsSlide = (selector: string) => /(^|[\s>+~])\.slide(?:$|[\s>+~.:#\[])/.test(selector);
-const isDeckEnhanced = (selector: string) => /(^|[\s>+~])\.deck-enhanced(?:$|[\s>+~.:#\[])/.test(selector);
+const targetsSlide = (selector: string) => /\.slide(?![-_a-zA-Z0-9])/.test(selector);
+const isDeckEnhanced = (selector: string) => /\.deck-enhanced(?![-_a-zA-Z0-9])/.test(selector);
 const normalizedValue = (value: string | undefined) => value?.replace(/\s*!important\s*$/, '').replace(/\s+/g, '') ?? '';
 const isZero = (value: string | undefined) => /^(?:0(?:\.0+)?|0%)$/.test(normalizedValue(value));
 
@@ -83,6 +83,13 @@ const hidesSlide = (rule: CssRule) => {
     || value('filter').includes('opacity(0)')
     || collapsedWithOverflow;
 };
+
+const hiddenBaselineSlideRules = (css: string) => cssRules(css).flatMap(splitSelectors).filter((rule) =>
+  targetsSlide(rule.selector)
+  && !isDeckEnhanced(rule.selector)
+  && !rule.context.some((context) => /^@media\s+print\b/.test(context))
+  && hidesSlide(rule),
+);
 
 describe('static deck document', () => {
   test('merender 12 section dan heading hierarchy', () => {
@@ -107,13 +114,7 @@ describe('static deck document', () => {
     expect(html).toContain('<main id="deck" data-deck>');
     expect(html).not.toMatch(/<section class="slide"[^>]*(?:\shidden(?:\s|=|>)|\saria-hidden=)/);
     expect(deckCss).toContain('.slide{position:relative;min-height:100svh');
-    const hiddenBaselineSlideRules = cssRules(deckCss).flatMap(splitSelectors).filter((rule) =>
-      targetsSlide(rule.selector)
-      && !isDeckEnhanced(rule.selector)
-      && !rule.context.some((context) => /^@media\s+print\b/.test(context))
-      && hidesSlide(rule),
-    );
-    expect(hiddenBaselineSlideRules).toEqual([]);
+    expect(hiddenBaselineSlideRules(deckCss)).toEqual([]);
     expect(deckCss).toContain('@media screen{.slide__sources{display:none}}');
     expect(printCss).toContain('.slide__sources{display:block}');
   });
@@ -121,6 +122,29 @@ describe('static deck document', () => {
   test('menyembunyikan kontrol pada cetak tanpa menyembunyikan slide', () => {
     expect(printCss).toContain('.deck-controls{display:none!important}');
     expect(printCss).toContain('.slide{display:block!important;visibility:visible!important}');
+  });
+
+  test('mendeteksi selector majemuk dan at-rule layar yang menyembunyikan slide', () => {
+    const fixture = `
+      section.slide{display:none}
+      .deck.slide{visibility:hidden}
+      @supports (display:grid){.slide{opacity:0}}
+      @container deck (width > 1px){.slide{content-visibility:hidden}}
+      @layer presentation{.slide{transform:scale(0)}}
+      .deck-enhanced .slide{display:none}
+      .slide__title{display:none}
+      @media print{.slide{display:none}}
+    `;
+    const detectedSelectors = hiddenBaselineSlideRules(fixture).map((rule) => rule.selector);
+    expect(detectedSelectors).toEqual([
+      'section.slide',
+      '.deck.slide',
+      '.slide',
+      '.slide',
+      '.slide',
+    ]);
+    expect(detectedSelectors).not.toContain('.deck-enhanced .slide');
+    expect(detectedSelectors).not.toContain('.slide__title');
   });
 
   test('menempatkan full logo hanya pada slide pembuka dan penutup', () => {
