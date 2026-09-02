@@ -10,9 +10,9 @@ const chromePath = process.env.CHROME_PATH ?? 'C:\\Program Files\\Google\\Chrome
 const chromeDebugUrl = 'http://127.0.0.1:9223';
 const requestTimeout = 1_000;
 
-const fetchWithTimeout = async (input: string) => {
+const fetchWithTimeout = async (input: string, timeoutMs: number) => {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), requestTimeout);
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
     return await fetch(input, { signal: controller.signal });
   } finally {
@@ -20,31 +20,25 @@ const fetchWithTimeout = async (input: string) => {
   }
 };
 
-const waitForPreview = async () => {
+const waitForHttp = async (input: string, unavailableMessage: string) => {
   const deadline = Date.now() + 20_000;
-  while (Date.now() < deadline) {
+  while (true) {
+    const remaining = deadline - Date.now();
+    if (remaining <= 0) break;
     try {
-      if ((await fetchWithTimeout(url)).status === 200) return;
+      if ((await fetchWithTimeout(input, Math.min(requestTimeout, remaining))).status === 200) return;
     } catch {
-      // Preview belum siap; lanjut polling hingga batas waktu.
+      // Endpoint belum siap; lanjut polling hingga batas waktu.
     }
-    await Bun.sleep(200);
+    const remainingAfterRequest = deadline - Date.now();
+    if (remainingAfterRequest <= 0) break;
+    await Bun.sleep(Math.min(200, remainingAfterRequest));
   }
-  throw new Error('Preview deck tidak siap dalam 20 detik');
+  throw new Error(unavailableMessage);
 };
 
-const waitForChrome = async () => {
-  const deadline = Date.now() + 20_000;
-  while (Date.now() < deadline) {
-    try {
-      if ((await fetchWithTimeout(`${chromeDebugUrl}/json/version`)).status === 200) return;
-    } catch {
-      // Chrome belum siap; lanjut polling hingga batas waktu.
-    }
-    await Bun.sleep(200);
-  }
-  throw new Error('Chrome tidak siap dalam 20 detik');
-};
+const waitForPreview = () => waitForHttp(url, 'Preview deck tidak siap dalam 20 detik');
+const waitForChrome = () => waitForHttp(`${chromeDebugUrl}/json/version`, 'Chrome tidak siap dalam 20 detik');
 
 let preview: ReturnType<typeof Bun.spawn> | undefined;
 let chrome: ReturnType<typeof Bun.spawn> | undefined;
