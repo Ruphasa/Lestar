@@ -1,0 +1,78 @@
+---
+import type { SlideSpec } from '../data/slides';
+import VineOrnament from './VineOrnament.astro';
+
+interface Props {
+  slide: SlideSpec;
+}
+
+const { slide } = Astro.props;
+
+if (!['title', 'problem', 'gap', 'cascade', 'demo', 'architecture', 'fallback', 'three-ui', 'business', 'market', 'roadmap', 'closing'].includes(slide.kind)) {
+  throw new Error(`Unknown slide kind: ${slide.kind}`);
+}
+---
+
+{slide.kind === 'title' || slide.kind === 'closing' ? (
+  <div class="slide-content slide-content--hero">
+    <img class="slide-content__logo" src="/assets/logo-full.png" alt="Lestar" />
+    {slide.body.map((paragraph) => <p class="slide-content__body">{paragraph}</p>)}
+    <VineOrnament />
+  </div>
+) : slide.kind === 'problem' ? (
+  <dl class="fact-list">
+    {slide.items?.map((item) => <div><dt>{item.label}</dt><dd>{item.value}</dd></div>)}
+  </dl>
+) : slide.kind === 'gap' ? (
+  <ol class="gap-list">
+    {slide.items?.map((item) => <li><strong>{item.label}</strong><span>{item.detail}</span></li>)}
+  </ol>
+) : slide.kind === 'cascade' ? (
+  <ol class="cascade-list">
+    {slide.body.map((item) => <li class={item === 'Validasi fisik' ? 'is-gate' : undefined}>{item}</li>)}
+  </ol>
+) : slide.kind === 'demo' ? (
+  <div class="demo-content">
+    <p class="demo-content__word">{slide.body[0]}</p>
+    <p class="slide-content__body">{slide.body[1]}</p>
+  </div>
+) : slide.kind === 'architecture' ? (
+  <div class="architecture-content">
+    <svg class="architecture-content__connector" viewBox="0 0 100 100" aria-hidden="true" focusable="false"><path d="M15 20H85M15 45H85M15 70H85M50 10V90" fill="none" stroke="currentColor" stroke-width="1"/></svg>
+    <ol>
+      {slide.items?.map((item) => <li><strong>{item.label}</strong><span>{item.detail}</span></li>)}
+    </ol>
+  </div>
+) : slide.kind === 'fallback' ? (
+  <div class="fallback-content">
+    <ol>
+      {slide.items?.map((item) => <li><strong>{item.label}</strong><code>{item.detail}</code></li>)}
+    </ol>
+    {slide.body.map((paragraph) => {
+      const [field, ...description] = paragraph.split(' ');
+      return <p class="slide-content__body"><code>{field}</code> {description.join(' ')}</p>;
+    })}
+  </div>
+) : slide.kind === 'three-ui' ? (
+  <div class="three-ui-content">
+    <div class="three-ui-content__screenshots">
+      {slide.images?.map((image, index) => <figure><img src={image} width="1080" height="2400" alt={slide.body[index]} /></figure>)}
+    </div>
+    {slide.body.map((paragraph) => <p class="slide-content__body">{paragraph}</p>)}
+  </div>
+) : slide.kind === 'business' ? (
+  <ol class="business-list">
+    {slide.items?.map((item) => <li>{item.value && <strong>{item.value}</strong>}<span>{item.label}</span></li>)}
+  </ol>
+) : slide.kind === 'market' ? (
+  <div class="market-content">
+    <dl>
+      {slide.items?.map((item) => <div><dt>{item.label}</dt><dd>{item.value}</dd></div>)}
+    </dl>
+    {slide.body.map((paragraph) => <p class="slide-content__body">{paragraph}</p>)}
+  </div>
+) : slide.kind === 'roadmap' ? (
+  <ol class="roadmap-list">
+    {slide.items?.map((item) => <li><strong>{item.label}</strong><span>{item.detail}</span></li>)}
+  </ol>
+) : null}

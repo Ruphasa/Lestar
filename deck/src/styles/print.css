@@ -1,0 +1,5 @@
+@media print{
+  .deck-controls{display:none!important}
+  .slide{display:block!important;visibility:visible!important}
+  .slide__sources{display:block}
+}

@@ -1,0 +1,25 @@
+---
+import type { SlideSpec } from '../data/slides';
+
+interface Props {
+  slide: SlideSpec;
+  isTitle?: boolean;
+}
+
+const { slide, isTitle = false } = Astro.props;
+const Heading = isTitle ? 'h1' : 'h2';
+---
+
+<section class="slide" id={`slide-${slide.number}`} data-slide={slide.number} data-kind={slide.kind} aria-labelledby={`slide-${slide.number}-title`}>
+  <div class="slide__inner">
+    {slide.kicker && <p class="slide__kicker">{slide.kicker}</p>}
+    <Heading id={`slide-${slide.number}-title`} class="slide__title">{slide.title}</Heading>
+    <slot />
+  </div>
+  <footer class="slide__footer">
+    <span aria-hidden="true">{slide.number} / 12</span>
+    <ul class="slide__sources" aria-label="Sumber slide">
+      {slide.sources.map((source) => <li>{source.path} · {source.detail}</li>)}
+    </ul>
+  </footer>
+</section>
