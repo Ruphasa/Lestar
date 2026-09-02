@@ -19,6 +19,22 @@ foreach ($relative in $required) {
   }
 }
 
+foreach ($shot in @('consumer','merchant','partner')) {
+  $shotPath = Join-Path $landingRoot "assets/screenshots/$shot.png"
+  $bytes = [System.IO.File]::ReadAllBytes($shotPath)
+  if ($bytes.Length -lt 33 -or $bytes[0] -ne 137 -or $bytes[1] -ne 80 -or
+      $bytes[2] -ne 78 -or $bytes[3] -ne 71) {
+    throw "Screenshot $shot bukan PNG valid"
+  }
+  $width = ((([int]$bytes[16] -shl 24) -bor ([int]$bytes[17] -shl 16) -bor
+    ([int]$bytes[18] -shl 8) -bor [int]$bytes[19]))
+  $height = ((([int]$bytes[20] -shl 24) -bor ([int]$bytes[21] -shl 16) -bor
+    ([int]$bytes[22] -shl 8) -bor [int]$bytes[23]))
+  if ($width -ne 1080 -or $height -ne 2400) {
+    throw "Screenshot $shot harus 1080x2400; ditemukan ${width}x${height}"
+  }
+}
+
 foreach ($svgName in @('logo-glyph.svg','value-route.svg','cascade.svg','cascade-mobile.svg')) {
   $svgPath = Join-Path $landingRoot "assets/$svgName"
   $svg = Get-Content -Raw -Encoding UTF8 -LiteralPath $svgPath
@@ -88,6 +104,34 @@ if ($css -match 'linear-gradient|radial-gradient|backdrop-filter') {
 }
 if ($css -notmatch 'prefers-reduced-motion' -or $css -notmatch ':focus-visible') {
   throw 'Reduced motion atau focus-visible belum diterapkan'
+}
+$cssTokens = @('--paper:#EDE5D8','--forest:#265938','--emerald-deep:#009966','--orange:#F38222','--ink:#0A0A0A')
+$compactCss = $css -replace '\s',''
+foreach ($token in $cssTokens) {
+  if (-not $compactCss.Contains($token)) { throw "Token CSS hilang: $token" }
+}
+foreach ($width in @('320px','768px','1024px','1440px')) {
+  if (-not $css.Contains($width)) { throw "Strategi viewport tidak mencakup $width" }
+}
+foreach ($shot in @('consumer','merchant','partner')) {
+  if ($html -notmatch ("assets/screenshots/$shot\.png")) { throw "Screenshot $shot belum dipasang" }
+  $shotPattern = 'assets/screenshots/{0}\.png["''][^>]*width=["'']1080["''][^>]*height=["'']2400["'']' -f $shot
+  $reverseShotPattern = 'width=["'']1080["''][^>]*height=["'']2400["''][^>]*assets/screenshots/{0}\.png' -f $shot
+  if ($html -notmatch $shotPattern -and $html -notmatch $reverseShotPattern) {
+    throw "Screenshot $shot wajib memiliki dimensi eksplisit 1080x2400"
+  }
+}
+if ($html -notmatch 'loading="lazy"' -or $html -notmatch '<img[^>]+alt="[^"]+"') {
+  throw 'Gambar screenshot wajib memiliki lazy loading dan alt text deskriptif'
+}
+if ($html -match 'mockup\.png') { throw 'mockup.png tidak boleh dipakai' }
+if ($css -notmatch 'pointer-events:none' -or $css -notmatch 'overflow-x:hidden') {
+  throw 'Ornamen atau proteksi overflow horizontal belum diterapkan'
+}
+$app = Get-Content -Raw -Encoding UTF8 -LiteralPath (Join-Path $landingRoot 'app.js')
+if ($app -notmatch 'IntersectionObserver' -or $app -notmatch 'prefers-reduced-motion' -or
+    $app -notmatch 'data-reveal') {
+  throw 'Progressive enhancement reveal belum lengkap'
 }
 
 $sourceApk = Join-Path $repoRoot 'build/app/outputs/flutter-apk/app-release.apk'

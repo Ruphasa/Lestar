@@ -90,26 +90,41 @@
     <section id="aktor" aria-labelledby="aktor-title">
       <h2 id="aktor-title">Tiga dunia kerja, tiga antarmuka</h2>
       <p>Lestar tidak memaksakan satu design system ke tiga aktor yang hidup di dunia berbeda.</p>
-      <div class="actors">
+      <div class="actors" data-reveal>
         <article class="actor actor--consumer">
+          <figure class="actor__screen">
+            <img src="assets/screenshots/consumer.png" width="1080" height="2400" loading="lazy" alt="Layar Radar aplikasi Lestar untuk konsumen, dengan navigasi Radar, Feed, Pesanan, dan Profil.">
+          </figure>
           <h3>Konsumen</h3>
           <p>Pengalaman ringan dan menyenangkan untuk berburu penawaran.</p>
         </article>
         <article class="actor actor--merchant">
+          <figure class="actor__screen">
+            <img src="assets/screenshots/merchant.png" width="1080" height="2400" loading="lazy" alt="Dashboard merchant Verde Kitchen di aplikasi Lestar dengan forecast stok besok.">
+          </figure>
           <h3>Merchant</h3>
           <p>Kokpit data untuk keputusan operasional.</p>
         </article>
         <article class="actor actor--partner">
+          <figure class="actor__screen">
+            <img src="assets/screenshots/partner.png" width="1080" height="2400" loading="lazy" alt="Beranda pengepul Pak Budi di aplikasi Lestar dengan jumlah sampah organik tersedia dan tombol jemput sekarang.">
+          </figure>
           <h3>Pengepul</h3>
           <p>Antarmuka yang terbaca di luar ruangan dan dapat digunakan dengan satu tangan.</p>
         </article>
       </div>
     </section>
 
-    <section id="buffer" aria-labelledby="buffer-title">
-      <h2 id="buffer-title">Mencegah sebelum memulihkan</h2>
-      <p>Buffer Intelligence memakai LSTM untuk memprediksi permintaan besok. Merchant berani memproduksi lebih banyak karena setiap surplus punya jalur keluar.</p>
-      <p>Asal setiap prediksi dicatat pada <code>forecasts.source</code>.</p>
+    <section id="buffer" class="buffer" aria-labelledby="buffer-title">
+      <div class="buffer__copy">
+        <p class="eyebrow">Buffer Intelligence</p>
+        <h2 id="buffer-title">Mencegah sebelum memulihkan</h2>
+        <p>Buffer Intelligence memakai LSTM untuk memprediksi permintaan besok. Merchant berani memproduksi lebih banyak karena setiap surplus punya jalur keluar.</p>
+        <p>Asal setiap prediksi dicatat pada <code>forecasts.source</code>.</p>
+      </div>
+      <div class="buffer__signal" aria-label="Prediksi permintaan meningkat lalu stabil">
+        <span>Hari ini</span><strong>108 porsi</strong><span>prediksi besok</span>
+      </div>
     </section>
 
     <section id="dampak" aria-labelledby="dampak-title">
@@ -134,7 +149,7 @@
       </dl>
     </section>
 
-    <section id="unduh" aria-labelledby="unduh-title">
+    <section id="unduh" class="download" aria-labelledby="unduh-title">
       <h2 id="unduh-title">Coba Lestar di Android</h2>
       <p>Unduh APK Lestar untuk mencoba alur demo. Ukuran berkas: 75,2 MiB.</p>
       <p><a class="button" href="/public/lestar.apk" download>Unduh APK</a></p>
