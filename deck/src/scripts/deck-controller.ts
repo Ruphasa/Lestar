@@ -14,6 +14,12 @@ export function resolveSwipe(startX: number, endX: number, threshold = 48): -1 |
   return Math.abs(delta) < threshold ? 0 : delta < 0 ? 1 : -1;
 }
 
+export function resolveFullscreenControlState(isFullscreen: boolean) {
+  return isFullscreen
+    ? { pressed: 'true', label: 'Keluar dari layar penuh' }
+    : { pressed: 'false', label: 'Buka layar penuh' };
+}
+
 export function createDeckController(root: HTMLElement) {
   const slides = [...root.querySelectorAll<HTMLElement>('[data-slide]')];
   const progress = document.querySelector<HTMLOutputElement>('[data-progress]');
@@ -68,7 +74,15 @@ export function createDeckController(root: HTMLElement) {
   };
   bindNavigationControl('previous', -1);
   bindNavigationControl('next', 1);
-  document.querySelector('[data-action="fullscreen"]')?.addEventListener('click', async () => {
+  const fullscreenControl = document.querySelector<HTMLElement>('[data-action="fullscreen"]');
+  const syncFullscreenControl = () => {
+    const state = resolveFullscreenControlState(Boolean(document.fullscreenElement));
+    fullscreenControl?.setAttribute('aria-pressed', state.pressed);
+    fullscreenControl?.setAttribute('aria-label', state.label);
+  };
+  syncFullscreenControl();
+  document.addEventListener('fullscreenchange', syncFullscreenControl);
+  fullscreenControl?.addEventListener('click', async () => {
     if (!document.fullscreenElement) await document.documentElement.requestFullscreen?.();
     else await document.exitFullscreen?.();
   });

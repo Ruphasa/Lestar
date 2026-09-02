@@ -8,12 +8,23 @@ const deck = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const url = 'http://127.0.0.1:4327';
 const chromePath = process.env.CHROME_PATH ?? 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 const chromeDebugUrl = 'http://127.0.0.1:9223';
+const requestTimeout = 1_000;
+
+const fetchWithTimeout = async (input: string) => {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), requestTimeout);
+  try {
+    return await fetch(input, { signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+};
 
 const waitForPreview = async () => {
   const deadline = Date.now() + 20_000;
   while (Date.now() < deadline) {
     try {
-      if ((await fetch(url)).status === 200) return;
+      if ((await fetchWithTimeout(url)).status === 200) return;
     } catch {
       // Preview belum siap; lanjut polling hingga batas waktu.
     }
@@ -26,7 +37,7 @@ const waitForChrome = async () => {
   const deadline = Date.now() + 20_000;
   while (Date.now() < deadline) {
     try {
-      if ((await fetch(`${chromeDebugUrl}/json/version`)).status === 200) return;
+      if ((await fetchWithTimeout(`${chromeDebugUrl}/json/version`)).status === 200) return;
     } catch {
       // Chrome belum siap; lanjut polling hingga batas waktu.
     }
@@ -44,9 +55,28 @@ const runAssertions = async () => {
   const browser = await chromium.connectOverCDP(chromeDebugUrl);
   try {
     const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+    await page.goto(`${url}/#slide-1`);
+    const fullscreen = page.locator('[data-action="fullscreen"]');
+    if (await fullscreen.getAttribute('aria-pressed') !== 'false') throw new Error('Kontrol fullscreen harus mulai tidak tertekan');
+    if (await fullscreen.getAttribute('aria-label') !== 'Buka layar penuh') throw new Error('Label awal fullscreen tidak sesuai');
+    if (await page.evaluate(() => Boolean(document.documentElement.requestFullscreen))) {
+      await fullscreen.click();
+      const entered = await page.waitForFunction(() => Boolean(document.fullscreenElement), undefined, { timeout: 2_000 }).then(() => true).catch(() => false);
+      if (entered) {
+        await page.waitForFunction(() => document.querySelector('[data-action="fullscreen"]')?.getAttribute('aria-pressed') === 'true', undefined, { timeout: 2_000 });
+        if (await fullscreen.getAttribute('aria-pressed') !== 'true') throw new Error('State fullscreen tidak tersinkron setelah masuk');
+        if (await fullscreen.getAttribute('aria-label') !== 'Keluar dari layar penuh') throw new Error('Label fullscreen tidak tersinkron setelah masuk');
+        await fullscreen.click();
+        await page.waitForFunction(() => !document.fullscreenElement, undefined, { timeout: 2_000 });
+        await page.waitForFunction(() => document.querySelector('[data-action="fullscreen"]')?.getAttribute('aria-pressed') === 'false', undefined, { timeout: 2_000 });
+        if (await fullscreen.getAttribute('aria-pressed') !== 'false') throw new Error('State fullscreen tidak pulih setelah keluar');
+        if (await fullscreen.getAttribute('aria-label') !== 'Buka layar penuh') throw new Error('Label fullscreen tidak pulih setelah keluar');
+      }
+    }
     await page.goto(`${url}/#slide-7`);
     if (!(await page.locator('#slide-7').evaluate((element) => element.hasAttribute('data-active')))) throw new Error('Deep link #slide-7 tidak dipulihkan');
     await page.goto(`${url}/#slide-1`);
+    await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())));
     await page.keyboard.press('ArrowRight');
     if (!page.url().endsWith('#slide-2')) throw new Error('ArrowRight tidak menuju slide 2');
     await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())));
