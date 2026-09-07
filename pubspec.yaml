@@ -47,6 +47,7 @@ flutter:
 
   assets:
     - assets/logo.png
+    - assets/logo-full.png
 
   # Variable font — satu berkas melayani semua bobot.
   # Bobot diatur lewat fontVariations, bukan fontWeight. Lihat LestarType.

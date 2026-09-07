@@ -70,7 +70,7 @@ class _PartnerLanggananScreenState
   }
 }
 
-class PartnerSubscriptionView extends StatelessWidget {
+class PartnerSubscriptionView extends ConsumerWidget {
   const PartnerSubscriptionView({
     super.key,
     required this.partner,
@@ -83,7 +83,7 @@ class PartnerSubscriptionView extends StatelessWidget {
   final VoidCallback onExtend;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final expiry = partner.subscriptionExpiry;
     final active = partner.langgananAktif;
     return ListView(
@@ -131,6 +131,47 @@ class PartnerSubscriptionView extends StatelessWidget {
           icon: Icons.autorenew,
           loading: busy,
           onPressed: onExtend,
+        ),
+        const SizedBox(height: 16),
+        OutlinedButton.icon(
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size.fromHeight(52),
+            foregroundColor: LestarTokens.danger,
+            side: const BorderSide(color: LestarTokens.danger, width: 1.5),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          icon: const Icon(Icons.logout),
+          label: Text(
+            'KELUAR DARI AKUN',
+            style: LestarType.label(color: LestarTokens.danger),
+          ),
+          onPressed: () async {
+            final confirm = await showDialog<bool>(
+              context: context,
+              builder: (dCtx) => AlertDialog(
+                title: const Text('Keluar dari Lestar?'),
+                content: const Text('Anda dapat masuk kembali kapan saja.'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(dCtx).pop(false),
+                    child: const Text('Batal'),
+                  ),
+                  FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: LestarTokens.danger,
+                    ),
+                    onPressed: () => Navigator.of(dCtx).pop(true),
+                    child: const Text('Keluar'),
+                  ),
+                ],
+              ),
+            );
+            if (confirm == true) {
+              await ref.read(authRepositoryProvider).signOut();
+            }
+          },
         ),
       ],
     );

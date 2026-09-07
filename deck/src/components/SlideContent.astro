@@ -1,0 +1,208 @@
+---
+import type { SlideSpec } from '../data/slides';
+import VineOrnament from './VineOrnament.astro';
+
+interface Props {
+  slide: SlideSpec;
+}
+
+const { slide } = Astro.props;
+
+if (!['title', 'problem', 'gap', 'cascade', 'demo', 'architecture', 'fallback', 'three-ui', 'business', 'market', 'roadmap', 'closing'].includes(slide.kind)) {
+  throw new Error(`Unknown slide kind: ${slide.kind}`);
+}
+---
+
+{slide.kind === 'title' || slide.kind === 'closing' ? (
+  <div class="slide-content slide-content--hero">
+    <img class="slide-content__logo" src="/assets/logo-full.png" alt="Lestar" />
+    {slide.body.map((paragraph) => <p class="slide-content__body">{paragraph}</p>)}
+    <VineOrnament variant={slide.kind} />
+  </div>
+) : slide.kind === 'problem' ? (
+  <dl class="fact-list">
+    {slide.items?.map((item) => <div><dd>{item.value}</dd><dt>{item.label}</dt></div>)}
+  </dl>
+) : slide.kind === 'gap' ? (
+  <ol class="gap-list">
+    {slide.items?.map((item, index) => <li><span aria-hidden="true">0{index + 1}</span><strong>{item.label}</strong><small>{item.detail}</small></li>)}
+  </ol>
+) : slide.kind === 'cascade' ? (
+  <div class="cascade-flow">
+    <div class="cascade-flow__upstream">
+      <div class="cascade-step">
+        <span class="cascade-step__num">01</span>
+        <strong>{slide.body[0]}</strong>
+      </div>
+      <svg class="cascade-arrow" viewBox="0 0 40 20" fill="none" aria-hidden="true">
+        <path d="M4 10H32M32 10L24 4M32 10L24 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+      </svg>
+      <div class="cascade-step">
+        <span class="cascade-step__num">02</span>
+        <strong>{slide.body[1]}</strong>
+      </div>
+      <svg class="cascade-arrow" viewBox="0 0 40 20" fill="none" aria-hidden="true">
+        <path d="M4 10H32M32 10L24 4M32 10L24 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+      </svg>
+      <div class="cascade-step">
+        <span class="cascade-step__num">03</span>
+        <strong>{slide.body[2]}</strong>
+      </div>
+    </div>
+
+    <div class="cascade-gate">
+      <div class="cascade-gate__cartouche">
+        <span class="cascade-gate__badge">Gerbang Verifikasi</span>
+        <strong>{slide.body[3]}</strong>
+        <small>Pemeriksaan standar pangan segar</small>
+      </div>
+    </div>
+
+    <div class="cascade-flow__branches">
+      <div class="cascade-card cascade-card--b2c">
+        <span class="cascade-card__path-tag">layak konsumsi</span>
+        <h4>{slide.body[4]}</h4>
+        <p>Disalurkan cepat ke konsumen lokal via diskon flash radar</p>
+      </div>
+      <div class="cascade-card cascade-card--b2b">
+        <span class="cascade-card__path-tag">tidak layak konsumsi</span>
+        <h4>{slide.body[5]}</h4>
+        <p>Dijemput terjadwal untuk pakan maggot, kompos, & bioenergi</p>
+      </div>
+      <div class="cascade-card cascade-card--esg">
+        <span class="cascade-card__path-tag">jejak terukur</span>
+        <h4>{slide.body[6]}</h4>
+        <p>Pencatatan metrik emisi karbon & pelaporan transparansi dampak</p>
+      </div>
+    </div>
+  </div>
+) : slide.kind === 'demo' ? (
+  <div class="demo-content">
+    <p class="demo-content__word">{slide.body[0]}</p>
+    <p class="slide-content__body">{slide.body[1]}</p>
+  </div>
+) : slide.kind === 'architecture' ? (
+  <div class="architecture-flow">
+    <div class="architecture-grid">
+      <div class="arch-card arch-card--app">
+        <div class="arch-card__top">
+          <span class="arch-card__badge">01 · Klien</span>
+          <strong>{slide.items?.[0]?.label}</strong>
+        </div>
+        <p class="arch-card__detail">{slide.items?.[0]?.detail}</p>
+        <span class="arch-card__tags">Konsumen · Merchant · Mitra</span>
+      </div>
+      <div class="arch-card arch-card--db">
+        <div class="arch-card__top">
+          <span class="arch-card__badge">02 · Database</span>
+          <strong>{slide.items?.[1]?.label}</strong>
+        </div>
+        <p class="arch-card__detail">{slide.items?.[1]?.detail}</p>
+        <span class="arch-card__tags">PostgreSQL · Realtime · RLS</span>
+      </div>
+      <div class="arch-card arch-card--ai">
+        <div class="arch-card__top">
+          <span class="arch-card__badge">03 · Kecerdasan</span>
+          <strong>{slide.items?.[2]?.label}</strong>
+        </div>
+        <p class="arch-card__detail">{slide.items?.[2]?.detail}</p>
+        <span class="arch-card__tags">LSTM Surplus · Gemini Triage</span>
+      </div>
+      <div class="arch-card arch-card--web">
+        <div class="arch-card__top">
+          <span class="arch-card__badge">04 · Distribusi</span>
+          <strong>{slide.items?.[3]?.label}</strong>
+        </div>
+        <p class="arch-card__detail">{slide.items?.[3]?.detail}</p>
+        <span class="arch-card__tags">Astro SSG · Unduh APK · Transparansi</span>
+      </div>
+    </div>
+    <div class="architecture-pathways" aria-hidden="true">
+      <div class="arch-link arch-link--1-2">
+        <span class="arch-link__label">Sinkronisasi Realtime</span>
+        <div class="arch-link__line"></div>
+      </div>
+      <div class="arch-link arch-link--2-3">
+        <span class="arch-link__label">Inferensi AI & Triage</span>
+        <div class="arch-link__line"></div>
+      </div>
+      <div class="arch-link arch-link--4-1">
+        <span class="arch-link__label">Penyaluran APK</span>
+        <div class="arch-link__line"></div>
+      </div>
+    </div>
+  </div>
+) : slide.kind === 'fallback' ? (
+  <div class="fallback-content">
+    <ol>
+      {slide.items?.map((item, index) => <li><span aria-hidden="true">{index + 1}</span><strong>{item.label}</strong><code>{item.detail}</code></li>)}
+    </ol>
+    {slide.body.map((paragraph) => {
+      const [field, ...description] = paragraph.split(' ');
+      return <p class="slide-content__body"><code>{field}</code> {description.join(' ')}</p>;
+    })}
+  </div>
+) : slide.kind === 'three-ui' ? (
+  <div class="three-ui-content">
+    <div class="three-ui-content__screenshots">
+      {slide.images?.map((image, index) => <figure><img src={image} width="1080" height="2400" alt={slide.body[index]} /><figcaption class="slide-content__body">{slide.body[index]}</figcaption></figure>)}
+    </div>
+  </div>
+) : slide.kind === 'business' ? (
+  <div class="business-columns">
+    <div class="business-card business-card--b2c">
+      <div class="business-card__header">
+        <span class="business-card__num">01</span>
+        <div class="business-card__line"></div>
+      </div>
+      <strong>{slide.items?.[0]?.label}</strong>
+      <p>Bagi hasil transaksi makanan surplus B2C melalui diskon radar.</p>
+    </div>
+    <div class="business-card business-card--b2b">
+      <div class="business-card__header">
+        <span class="business-card__num">02</span>
+        <div class="business-card__line"></div>
+      </div>
+      <strong>{slide.items?.[1]?.label}</strong>
+      <p>Retribusi platform SaaS operasional logistik limbah organik terjadwal.</p>
+    </div>
+    <div class="business-card business-card--green">
+      <div class="business-card__header">
+        <span class="business-card__num">03</span>
+        <div class="business-card__line"></div>
+      </div>
+      <span class="business-card__val">{slide.items?.[2]?.value}</span>
+      <strong>{slide.items?.[2]?.label}</strong>
+      <p>Retribusi mikro per transaksi mendanai pemulihan dampak lingkungan.</p>
+    </div>
+  </div>
+) : slide.kind === 'market' ? (
+  <div class="market-content">
+    <dl>
+      {slide.items?.map((item) => <div><dt>{item.label}</dt><dd>{item.value}</dd><span aria-hidden="true"></span></div>)}
+    </dl>
+    {slide.body.map((paragraph) => <p class="slide-content__body">{paragraph}</p>)}
+  </div>
+) : slide.kind === 'roadmap' ? (
+  <div class="roadmap-timeline">
+    <div class="roadmap-timeline__track" aria-hidden="true">
+      <div class="roadmap-track-line"></div>
+      <div class="roadmap-track-node" style="left: 10%;"></div>
+      <div class="roadmap-track-node" style="left: 30%;"></div>
+      <div class="roadmap-track-node" style="left: 50%;"></div>
+      <div class="roadmap-track-node" style="left: 70%;"></div>
+      <div class="roadmap-track-node" style="left: 90%;"></div>
+    </div>
+    <ol class="roadmap-timeline__steps">
+      {slide.items?.map((item, idx) => (
+        <li class={`roadmap-step roadmap-step--${idx}`}>
+          <div class="roadmap-step__card">
+            <span class="roadmap-step__badge">Fase {idx}</span>
+            <strong>{item.label}</strong>
+            <span class="roadmap-step__detail">{item.detail}</span>
+          </div>
+        </li>
+      ))}
+    </ol>
+  </div>
+) : null}

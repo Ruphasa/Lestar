@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../shared/repositories/providers.dart';
 import '../demo/role_switcher.dart';
 import '../theme/tokens.dart';
 import 'routes.dart';
@@ -22,13 +24,13 @@ void _keCabang(StatefulNavigationShell shell, int i) => shell.goBranch(
 
 // ── Merchant ─────────────────────────────────────────────────────────────
 
-class MerchantShell extends StatelessWidget {
+class MerchantShell extends ConsumerWidget {
   const MerchantShell({super.key, required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context, WidgetRef ref) => Scaffold(
     appBar: AppBar(
       title: const Row(
         children: [
@@ -42,6 +44,35 @@ class MerchantShell extends StatelessWidget {
           tooltip: 'Scan QR',
           icon: const Icon(Icons.qr_code_scanner),
           onPressed: () => context.push(Routes.merchantScan),
+        ),
+        IconButton(
+          tooltip: 'Keluar',
+          icon: const Icon(Icons.logout),
+          onPressed: () async {
+            final confirm = await showDialog<bool>(
+              context: context,
+              builder: (dCtx) => AlertDialog(
+                title: const Text('Keluar dari Lestar?'),
+                content: const Text('Anda dapat masuk kembali kapan saja.'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(dCtx).pop(false),
+                    child: const Text('Batal'),
+                  ),
+                  FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: LestarTokens.danger,
+                    ),
+                    onPressed: () => Navigator.of(dCtx).pop(true),
+                    child: const Text('Keluar'),
+                  ),
+                ],
+              ),
+            );
+            if (confirm == true) {
+              await ref.read(authRepositoryProvider).signOut();
+            }
+          },
         ),
       ],
     ),

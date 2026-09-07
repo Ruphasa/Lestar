@@ -1,0 +1,28 @@
+---
+import DeckShell from '../components/DeckShell.astro';
+import SlideContent from '../components/SlideContent.astro';
+import SlideFrame from '../components/SlideFrame.astro';
+import { slides } from '../data/slides';
+import '../styles/deck.css';
+import '../styles/print.css';
+---
+
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#265938" />
+    <meta name="description" content="Presentasi Lestar tentang pemulihan nilai pangan surplus." />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" href="/assets/logo-glyph.svg" type="image/svg+xml" />
+    <link rel="preload" href="/assets/fonts/PlusJakartaSans-wght.ttf" as="font" type="font/ttf" crossorigin />
+    <link rel="preload" href="/assets/fonts/Inter-opsz-wght.ttf" as="font" type="font/ttf" crossorigin />
+    <title>Lestar — Setiap kilogram punya jalur nilai</title>
+  </head>
+  <body>
+    <DeckShell>
+      {slides.map((slide) => <SlideFrame slide={slide} isTitle={slide.kind === 'title'}><SlideContent slide={slide} /></SlideFrame>)}
+    </DeckShell>
+  </body>
+</html>

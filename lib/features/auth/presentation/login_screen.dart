@@ -67,8 +67,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Tekan lama logo di build demo untuk berganti akun.
-                  const Center(child: RoleSwitcherLogo(size: 72)),
-                  const SizedBox(height: 24),
+                  const Center(child: RoleSwitcherLogo(size: 76)),
+                  const SizedBox(height: 20),
                   Text(
                     'Lestar',
                     textAlign: TextAlign.center,

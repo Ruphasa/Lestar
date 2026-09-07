@@ -28,6 +28,17 @@ class RoleSwitcherLogo extends ConsumerWidget {
       height: size,
       width: size,
       fit: BoxFit.contain,
+      errorBuilder: (context, error, stackTrace) => Image.asset(
+        'assets/logo-full.png',
+        height: size,
+        width: size,
+        fit: BoxFit.contain,
+        errorBuilder: (_, _, _) => Icon(
+          Icons.eco,
+          size: size,
+          color: LestarTokens.emeraldDeep,
+        ),
+      ),
     );
 
     if (!LestarConstants.demoMode) return logo;
@@ -73,6 +84,22 @@ Future<void> showRoleSwitcher(BuildContext context, WidgetRef ref) async {
                 await gantiKeAkun(context, ref, akun);
               },
             ),
+          const Divider(height: 16),
+          ListTile(
+            leading: const Icon(Icons.logout, color: LestarTokens.danger),
+            title: Text(
+              'Keluar dari Akun',
+              style: LestarType.isi(color: LestarTokens.danger),
+            ),
+            subtitle: Text(
+              'Keluar dari sesi dan kembali ke layar login',
+              style: LestarType.caption(),
+            ),
+            onTap: () async {
+              Navigator.of(sheetContext).pop();
+              await ref.read(authRepositoryProvider).signOut();
+            },
+          ),
           const SizedBox(height: 8),
         ],
       ),

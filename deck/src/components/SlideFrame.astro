@@ -1,0 +1,65 @@
+---
+import type { SlideSpec } from '../data/slides';
+
+interface Props {
+  slide: SlideSpec;
+  isTitle?: boolean;
+}
+
+const { slide, isTitle = false } = Astro.props;
+const Heading = isTitle ? 'h1' : 'h2';
+---
+
+<section class="slide" id={`slide-${slide.number}`} data-slide={slide.number} data-kind={slide.kind} aria-labelledby={`slide-${slide.number}-title`}>
+  <!-- Art Nouveau Botanical Frame & Corner Flourishes -->
+  <div class="slide__frame-decor" aria-hidden="true">
+    <svg class="decor-corner decor-corner--tl" viewBox="0 0 100 100" fill="none">
+      <path d="M8 92V24C8 15.163 15.163 8 24 8H92" stroke="currentColor" stroke-width="2" />
+      <path d="M18 92V28C18 22.477 22.477 18 28 18H92" stroke="currentColor" stroke-width="1" />
+      <path d="M8 8C20 20 30 40 30 60C30 75 22 85 8 90" stroke="currentColor" stroke-width="1.5" />
+      <path d="M8 8C20 20 40 30 60 30C75 30 85 22 90 8" stroke="currentColor" stroke-width="1.5" />
+      <circle cx="28" cy="28" r="3.5" fill="currentColor" />
+      <path d="M36 36C50 50 62 44 68 35C60 29 50 42 36 36Z" fill="currentColor" />
+      <path d="M36 36C50 50 44 62 35 68C29 60 42 50 36 36Z" fill="currentColor" />
+    </svg>
+    <svg class="decor-corner decor-corner--tr" viewBox="0 0 100 100" fill="none">
+      <path d="M8 92V24C8 15.163 15.163 8 24 8H92" stroke="currentColor" stroke-width="2" />
+      <path d="M18 92V28C18 22.477 22.477 18 28 18H92" stroke="currentColor" stroke-width="1" />
+      <path d="M8 8C20 20 30 40 30 60C30 75 22 85 8 90" stroke="currentColor" stroke-width="1.5" />
+      <path d="M8 8C20 20 40 30 60 30C75 30 85 22 90 8" stroke="currentColor" stroke-width="1.5" />
+      <circle cx="28" cy="28" r="3.5" fill="currentColor" />
+      <path d="M36 36C50 50 62 44 68 35C60 29 50 42 36 36Z" fill="currentColor" />
+      <path d="M36 36C50 50 44 62 35 68C29 60 42 50 36 36Z" fill="currentColor" />
+    </svg>
+    <svg class="decor-corner decor-corner--bl" viewBox="0 0 100 100" fill="none">
+      <path d="M8 92V24C8 15.163 15.163 8 24 8H92" stroke="currentColor" stroke-width="2" />
+      <path d="M18 92V28C18 22.477 22.477 18 28 18H92" stroke="currentColor" stroke-width="1" />
+      <path d="M8 8C20 20 30 40 30 60C30 75 22 85 8 90" stroke="currentColor" stroke-width="1.5" />
+      <path d="M8 8C20 20 40 30 60 30C75 30 85 22 90 8" stroke="currentColor" stroke-width="1.5" />
+      <circle cx="28" cy="28" r="3.5" fill="currentColor" />
+      <path d="M36 36C50 50 62 44 68 35C60 29 50 42 36 36Z" fill="currentColor" />
+      <path d="M36 36C50 50 44 62 35 68C29 60 42 50 36 36Z" fill="currentColor" />
+    </svg>
+    <svg class="decor-corner decor-corner--br" viewBox="0 0 100 100" fill="none">
+      <path d="M8 92V24C8 15.163 15.163 8 24 8H92" stroke="currentColor" stroke-width="2" />
+      <path d="M18 92V28C18 22.477 22.477 18 28 18H92" stroke="currentColor" stroke-width="1" />
+      <path d="M8 8C20 20 30 40 30 60C30 75 22 85 8 90" stroke="currentColor" stroke-width="1.5" />
+      <path d="M8 8C20 20 40 30 60 30C75 30 85 22 90 8" stroke="currentColor" stroke-width="1.5" />
+      <circle cx="28" cy="28" r="3.5" fill="currentColor" />
+      <path d="M36 36C50 50 62 44 68 35C60 29 50 42 36 36Z" fill="currentColor" />
+      <path d="M36 36C50 50 44 62 35 68C29 60 42 50 36 36Z" fill="currentColor" />
+    </svg>
+  </div>
+
+  <div class="slide__inner">
+    {slide.kicker && <p class="slide__kicker">{slide.kicker}</p>}
+    <Heading id={`slide-${slide.number}-title`} class="slide__title">{slide.title}</Heading>
+    <slot />
+  </div>
+  <footer class="slide__footer">
+    <span aria-hidden="true">{slide.number} / 12</span>
+    <ul class="slide__sources" aria-label="Sumber slide">
+      {slide.sources.map((source) => <li>{source.path} · {source.detail}</li>)}
+    </ul>
+  </footer>
+</section>

@@ -95,9 +95,11 @@ class LestarConstants {
     defaultValue: 'sb_publishable_DqmsbnmC7rUB8tUSmBAw3Q_CTi-rAue',
   );
 
-  /// Basis URL FastAPI milik Agent C. Kosong berarti klien API langsung
-  /// memakai `FallbackEngine` tanpa menunggu timeout.
-  static const String apiBaseUrl = String.fromEnvironment('API_BASE_URL');
+  /// Basis URL FastAPI milik Agent C di Railway.
+  static const String apiBaseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'https://lestar-lstm-production.up.railway.app',
+  );
 
   /// Radius radar bawaan, kilometer.
   static const double radiusKonsumenKm = 5;

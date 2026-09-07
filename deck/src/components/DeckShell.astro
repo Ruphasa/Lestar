@@ -1,0 +1,11 @@
+---
+import DeckControls from './DeckControls.astro';
+---
+
+<a class="skip-link" href="#deck">Lewati ke isi presentasi</a>
+<main id="deck" data-deck>
+  <slot />
+</main>
+<DeckControls />
+<p class="sr-only" data-announcer aria-live="polite"></p>
+<script src="../scripts/deck-controller.ts"></script>

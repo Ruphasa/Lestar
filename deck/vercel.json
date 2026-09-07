@@ -1,0 +1,15 @@
+{
+  "buildCommand": "bun run build",
+  "outputDirectory": "dist",
+  "framework": "astro",
+  "cleanUrls": true,
+  "headers": [
+    {
+      "source": "/Lestar-KMIPN-VIII.pdf",
+      "headers": [
+        { "key": "Content-Type", "value": "application/pdf" },
+        { "key": "Content-Disposition", "value": "attachment; filename=Lestar-KMIPN-VIII.pdf" }
+      ]
+    }
+  ]
+}

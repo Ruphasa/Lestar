@@ -1,0 +1,12 @@
+@page{size:13.333in 7.5in;margin:0}
+@media print{
+  html,body{width:13.333in;margin:0;background:#FFFFFF;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+  .skip-link,[data-announcer]{display:none!important}
+  .deck-controls{display:none!important}
+  main{display:block!important}
+  .slide{display:block!important;visibility:visible!important}
+  .slide{position:relative!important;inset:auto!important;width:13.333in;height:7.5in;min-height:0!important;overflow:hidden;break-after:page;page-break-after:always;opacity:1!important;transform:none!important;transition:none!important}
+  .slide:last-child{break-after:auto;page-break-after:auto}
+  .slide__sources{display:block}
+  .slide__sources{font-size:9pt}
+}
