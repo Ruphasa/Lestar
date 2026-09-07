@@ -17,20 +17,27 @@ if (!['title', 'problem', 'gap', 'cascade', 'demo', 'architecture', 'fallback', 
   <div class="slide-content slide-content--hero">
     <img class="slide-content__logo" src="/assets/logo-full.png" alt="Lestar" />
     {slide.body.map((paragraph) => <p class="slide-content__body">{paragraph}</p>)}
-    <VineOrnament />
+    <VineOrnament variant={slide.kind} />
   </div>
 ) : slide.kind === 'problem' ? (
   <dl class="fact-list">
-    {slide.items?.map((item) => <div><dt>{item.label}</dt><dd>{item.value}</dd></div>)}
+    {slide.items?.map((item) => <div><dd>{item.value}</dd><dt>{item.label}</dt></div>)}
   </dl>
 ) : slide.kind === 'gap' ? (
   <ol class="gap-list">
-    {slide.items?.map((item) => <li><strong>{item.label}</strong><span>{item.detail}</span></li>)}
+    {slide.items?.map((item, index) => <li><span aria-hidden="true">0{index + 1}</span><strong>{item.label}</strong><small>{item.detail}</small></li>)}
   </ol>
 ) : slide.kind === 'cascade' ? (
-  <ol class="cascade-list">
-    {slide.body.map((item) => <li class={item === 'Validasi fisik' ? 'is-gate' : undefined}>{item}</li>)}
-  </ol>
+  <div class="cascade-content">
+    <ol class="cascade-list">
+      {slide.body.map((item, index) => (
+        <li class={item === 'Validasi fisik' ? 'is-gate' : index > 3 ? 'is-branch' : undefined}>
+          {index > 3 && <small>{['layak konsumsi', 'tidak layak konsumsi', 'jejak terukur'][index - 4]}</small>}
+          <span>{item}</span>
+        </li>
+      ))}
+    </ol>
+  </div>
 ) : slide.kind === 'demo' ? (
   <div class="demo-content">
     <p class="demo-content__word">{slide.body[0]}</p>
@@ -38,7 +45,10 @@ if (!['title', 'problem', 'gap', 'cascade', 'demo', 'architecture', 'fallback', 
   </div>
 ) : slide.kind === 'architecture' ? (
   <div class="architecture-content">
-    <svg class="architecture-content__connector" viewBox="0 0 100 100" aria-hidden="true" focusable="false"><path d="M15 20H85M15 45H85M15 70H85M50 10V90" fill="none" stroke="currentColor" stroke-width="1"/></svg>
+    <svg class="architecture-content__connector" viewBox="0 0 1000 310" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+      <path d="M185 72C330 72 365 155 500 155S670 72 815 72M500 155V238M185 238C330 238 365 155 500 155S670 238 815 238" />
+      <circle cx="500" cy="155" r="8" />
+    </svg>
     <ol>
       {slide.items?.map((item) => <li><strong>{item.label}</strong><span>{item.detail}</span></li>)}
     </ol>
@@ -46,7 +56,7 @@ if (!['title', 'problem', 'gap', 'cascade', 'demo', 'architecture', 'fallback', 
 ) : slide.kind === 'fallback' ? (
   <div class="fallback-content">
     <ol>
-      {slide.items?.map((item) => <li><strong>{item.label}</strong><code>{item.detail}</code></li>)}
+      {slide.items?.map((item, index) => <li><span aria-hidden="true">{index + 1}</span><strong>{item.label}</strong><code>{item.detail}</code></li>)}
     </ol>
     {slide.body.map((paragraph) => {
       const [field, ...description] = paragraph.split(' ');
@@ -56,23 +66,34 @@ if (!['title', 'problem', 'gap', 'cascade', 'demo', 'architecture', 'fallback', 
 ) : slide.kind === 'three-ui' ? (
   <div class="three-ui-content">
     <div class="three-ui-content__screenshots">
-      {slide.images?.map((image, index) => <figure><img src={image} width="1080" height="2400" alt={slide.body[index]} /></figure>)}
+      {slide.images?.map((image, index) => <figure><img src={image} width="1080" height="2400" alt="" /><figcaption>{slide.body[index]}</figcaption></figure>)}
     </div>
-    {slide.body.map((paragraph) => <p class="slide-content__body">{paragraph}</p>)}
   </div>
 ) : slide.kind === 'business' ? (
-  <ol class="business-list">
-    {slide.items?.map((item) => <li>{item.value && <strong>{item.value}</strong>}<span>{item.label}</span></li>)}
-  </ol>
+  <div class="business-content">
+    <svg class="business-content__vine" viewBox="0 0 1000 300" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+      <path d="M48 165C205 165 230 106 382 106S550 158 622 158" />
+      <path d="M622 158C702 158 708 52 835 52M622 158C745 158 748 152 912 152M622 158C716 158 744 254 835 254" />
+      <path class="business-content__leaf" d="M307 110c-29-43-70-31-78 5 26 23 58 20 78-5ZM733 92c31-38 69-22 69 13-27 19-54 14-69-13Z" />
+    </svg>
+    <ol class="business-list">
+      {slide.items?.map((item) => <li>{item.value && <strong>{item.value}</strong>}<span>{item.label}</span></li>)}
+    </ol>
+  </div>
 ) : slide.kind === 'market' ? (
   <div class="market-content">
     <dl>
-      {slide.items?.map((item) => <div><dt>{item.label}</dt><dd>{item.value}</dd></div>)}
+      {slide.items?.map((item) => <div><dt>{item.label}</dt><dd>{item.value}</dd><span aria-hidden="true"></span></div>)}
     </dl>
     {slide.body.map((paragraph) => <p class="slide-content__body">{paragraph}</p>)}
   </div>
 ) : slide.kind === 'roadmap' ? (
-  <ol class="roadmap-list">
-    {slide.items?.map((item) => <li><strong>{item.label}</strong><span>{item.detail}</span></li>)}
-  </ol>
+  <div class="roadmap-content">
+    <svg class="roadmap-content__vine" viewBox="0 0 1100 250" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+      <path d="M44 136C168 46 263 222 390 130S614 43 735 133 932 207 1054 114" />
+    </svg>
+    <ol class="roadmap-list">
+      {slide.items?.map((item) => <li><strong>{item.label}</strong><span>{item.detail}</span></li>)}
+    </ol>
+  </div>
 ) : null}

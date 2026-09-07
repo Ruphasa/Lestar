@@ -1,5 +1,13 @@
-<svg class="vine-ornament" viewBox="0 0 1200 420" aria-hidden="true" focusable="false">
-  <path d="M60 350C170 300 110 190 250 210S380 340 485 275 610 95 745 170 820 340 940 250 1050 85 1140 70" fill="none" stroke="#265938" stroke-width="12" stroke-linecap="round"/>
-  <path d="M250 210c-56-54-102-26-93 17 38 17 74 7 93-17ZM745 170c40-62 91-49 100-9-29 30-69 30-100 9Z" fill="#265938"/>
-  <circle cx="486" cy="275" r="19" fill="#F38222"/>
+---
+interface Props {
+  variant?: 'title' | 'closing';
+}
+
+const { variant = 'title' } = Astro.props;
+---
+
+<svg class:list={['vine-ornament', `vine-ornament--${variant}`]} viewBox="0 0 1200 420" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+  <path class="vine-ornament__stem" d={variant === 'closing' ? 'M70 292C238 88 395 338 568 198S828 78 947 210 1079 329 1161 209' : 'M54 348C201 294 183 164 342 205S485 344 638 239 818 83 936 178 1023 278 1153 73'} />
+  <path class="vine-ornament__leaf" d={variant === 'closing' ? 'M326 230c-49-62-105-36-99 18 39 29 77 18 99-18ZM888 165c39-62 95-48 106-1-29 35-71 37-106 1Z' : 'M340 205c-55-64-111-31-97 24 43 23 80 10 97-24ZM934 178c42-68 103-51 111 0-33 35-77 36-111 0Z'} />
+  <circle class="vine-ornament__fruit" cx={variant === 'closing' ? '570' : '640'} cy={variant === 'closing' ? '198' : '239'} r="17" />
 </svg>
